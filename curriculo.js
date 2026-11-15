@@ -94,6 +94,51 @@ const visItems=(n,ico)=>Array.from({length:n},()=>`<span class="vis-item">${ico}
 function opts(answer,choices){let a=[...new Set(choices.map(String))];if(!a.includes(String(answer)))a.push(String(answer));while(a.length<4)a.push(String(rand(0,50)));return a.sort(()=>Math.random()-.5).slice(0,4).includes(String(answer))?shuffle(a).slice(0,4):shuffle([String(answer),...shuffle(a.filter(x=>x!==String(answer))).slice(0,3)]);}
 function shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){let j=rand(0,i);[a[i],a[j]]=[a[j],a[i]]}return a}
 function numbers(answer,min=0,step=1){let a=new Set([String(answer)]);let tries=0;while(a.size<4&&tries++<45){let offset=pick([-3,-2,-1,1,2,3,4,-4])*step;let n=Math.round((Number(answer)+offset)*100)/100;if(n>=min)a.add(String(n))}return shuffle([...a].slice(0,4))}
+const practiceHints = {
+ parity:'Forme pares de dois. Veja se sobra algum item.',
+ order3:'Compare os três números. Comece pelo menor.',
+ make10:'Conte a partir da quantidade que já tem até chegar a dez.',
+ tenframe:'Conte os espaços ocupados, uma fileira de cada vez.',
+ skip2small:'Dê um salto de dois a partir do último número.',
+ positions:'Comece pelo primeiro item e conte as posições na ordem.',
+ weekday:'Pense na ordem dos dias da semana.',
+ moneycoins:'Some os valores escritos nas moedas.',
+ before:'Volte um passo na sequência de números.',
+ halves:'Procure duas partes do mesmo tamanho.',
+ animalchart:'Compare o comprimento das barras dos animais.',
+ oddone:'Procure a característica que os outros desenhos têm em comum.',
+ neighbor:'Use a ordem dos números e dê um passo na direção pedida.',
+ count:'Aponte para um desenho de cada vez enquanto conta.',
+ compare:'Imagine os dois números na reta. Qual fica mais à direita?',
+ sequence:'Compare dois números vizinhos para descobrir o salto.',
+ skip:'Descubra quanto foi acrescentado de um número para o seguinte.',
+ place:'Observe o algarismo mais à direita.',
+ pattern:'Ache o grupo de figuras que se repete e acompanhe a ordem.',
+ shape:'Veja se a figura tem lados retos ou uma borda curva.',
+ sides:'Percorra a borda e conte cada lado reto uma vez.',
+ length:'Compare onde termina cada fita.',
+ money:'Junte o dinheiro que você tinha com o que recebeu.',
+ clock:'Leia o número antes dos dois pontos.',
+ chart:'Compare as barras das frutas. Veja qual vai mais longe.',
+ times:'Some a mesma quantidade uma vez para cada grupo.',
+ divide:'Distribua o total em grupos iguais e conte quanto fica em cada um.',
+ remainder:'Forme grupos completos e conte o que sobrou.',
+ fraction:'Conte apenas os pedaços destacados.',
+ missing:'Tire a quantidade conhecida do total para achar a parte escondida.',
+ perimeter:'Imagine um passeio pela borda. Some o comprimento dos quatro lados.',
+ area:'Conte quantos quadradinhos cabem em cada fila e quantas filas há.',
+ equiv:'Procure uma fração que multiplique os dois números pelo mesmo fator.',
+ convert:'Use 100 centímetros para cada metro.',
+ chance:'Conte quantas bolas há de cada cor.',
+ decimal:'Alinhe as vírgulas e some as casas correspondentes.',
+ fracadd:'Some os números de cima e conserve o número de baixo.',
+ percent:'Multiplique o total pela porcentagem e divida por 100.',
+ ratio:'Some a mesma quantidade de lápis para cada caixa.',
+ volume:'Multiplique comprimento, largura e altura.',
+ mean:'Some os números e divida pela quantidade de números.',
+ power:'Use a base como fator tantas vezes quanto indica o expoente.'
+};
+
 function question(s,level=1){
  const max=s.max, L=clamp(level,1,3), kind=s.kind;
  let a,b,answer,prompt,visual='',explain='',options=[];
@@ -185,7 +230,15 @@ function question(s,level=1){
    a=rand(2,7);b=rand(2,3);answer=a**b;prompt=`Quanto é ${a} elevado a ${b}?`;visual=`<span class="num-box">${a}<sup>${b}</sup></span>`;explain=`Multiplique ${a} por ele mesmo ${b} vezes. O resultado é ${answer}.`;options=close(answer);
  }else{throw Error(`Questão desconhecida: ${kind}`)}
  answer=String(answer);options=[...new Set(options.map(String))];if(!options.includes(answer))options[0]=answer;let tries=0;while(options.length<4&&tries++<50){let candidate=String(Number(answer)+rand(1,10));if(!options.includes(candidate))options.push(candidate)}options=shuffle(options.slice(0,4));
- return {prompt,visual,answer,explain,options};
+ let practiceHint=practiceHints[kind];
+ if(kind==='add'||kind==='story'||kind==='sub'){
+  practiceHint=`Comece no ${a} e conte ${b} passos para ${kind==='sub'?'trás':'a frente'}.`;
+ }
+ if(kind==='integer'){
+  practiceHint=b===0?'Somar zero mantém o número no mesmo lugar.':
+   `Comece no ${signed(a)} na reta numérica e ande ${Math.abs(b)} ${Math.abs(b)===1?'passo':'passos'} para a ${b<0?'esquerda':'direita'}.`;
+ }
+ return {prompt,visual,answer,explain,options,practiceHint};
 }
 
 window.MissaoAprenderCurriculo={YEARS,UNITS,SKILLS,question};

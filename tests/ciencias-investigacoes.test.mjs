@@ -168,3 +168,27 @@ test('sincronização aceita o conjunto ampliado e a mesclagem conserva missões
  for(const id of IDS_MISSOES)all.missions[id]={stars:1};
  assert.equal(Object.keys(normalizarEstado(all).missions).length,96);
 });
+
+test('uma atualização da nuvem mantém a conclusão visível e informa só estrelas novas',()=>{
+ const {context,click,html}=launch();
+ const bridge=context.MissaoAprenderSyncBridge;
+ bridge.selectScope('perfil-teste',emptyProgress());
+ const complete=()=>{
+  click({start:'c-maos'});
+  click({predict:'0'});
+  click({explore:'0'});
+  click({explore:'1'});
+  click({scienceAnswer:'dispensar'});
+  assert.match(html(),/Compare as duas mãos/);
+  click({scienceAnswer:'limpar'});
+  click({next:'1'});
+ };
+ complete();
+ assert.match(html(),/\+1 estrela nova/);
+ bridge.updateScope('perfil-teste',normalizarEstado(bridge.getData()));
+ assert.equal(context.MissaoAprenderTest.getView(),'result');
+ assert.match(html(),/Missão concluída!/);
+ complete();
+ assert.match(html(),/Seu recorde de estrelas foi mantido/);
+ assert.match(html(),/Voltar ao início/);
+});
