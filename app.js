@@ -66,8 +66,8 @@ function load(){
  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(merged))}catch(e){}
  return merged;
 }
-let data=load();let view='home';let session=null;let parentAllowed=false;let gateAnswer=0;let previousView='home';let gravityTimeout=null;
-function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));return true}catch(e){return false}}
+let data=load();let storageScope=STORAGE_KEY;let view='home';let session=null;let parentAllowed=false;let gateAnswer=0;let previousView='home';let gravityTimeout=null;
+function save(){try{localStorage.setItem(storageScope,JSON.stringify(data));return true}catch(e){return false}}
 function getMission(id){return MISSIONS.find(m=>m.id===id)}
 function worldMissions(world){return MISSIONS.filter(m=>m.world===world&&(world!=='math'||(m.grade?m.grade===data.grade:data.grade==='1')))}
 function currentMissions(){return [...worldMissions('math'),...worldMissions('review'),...worldMissions('science')]}
@@ -160,7 +160,7 @@ function navigate(to){clearTimeout(gravityTimeout);session=null;unitFilter='all'
 function start(id){const m=getMission(id);if(!m)return;clearTimeout(gravityTimeout);view='activity';session={mission:m,step:0,question:null,firstTry:0,errors:0,wrongCount:0,wrongOptions:new Set(),feedback:null,resolved:false,marked:new Set(),height:2,released:false,dropping:false,drops:0,angle:0,rotated:false,explored:new Set(),exploredScene:null};if(m.world!=='science')session.question=generateQuestion(m);render();window.scrollTo({top:0,behavior:'instant'});}
 function logRecord(){
  const m=session.mission,firstTry=session.wrongCount===0;
- data.records.push({id:m.id,world:m.world,firstTry,errors:session.wrongCount,date:new Date().toISOString()});
+ data.records.push({id:m.id,world:m.world,firstTry,errors:session.wrongCount,date:new Date().toISOString(),eventId:typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'ev-'+Date.now().toString(36)+Math.random().toString(36).slice(2)});
  if(m.type==='curriculum'){
    const p=skillInfo(m.id);p.tries++;p.correct+=firstTry?1:0;
    p.streak=firstTry?p.streak+1:0;p.mastered=p.correct>=10&&p.correct/p.tries>=.75;
@@ -170,7 +170,7 @@ function logRecord(){
  save();
 }
 function answer(value){if(view!=='activity'||!session||session.resolved)return;const m=session.mission;if(m.type==='discovery'&&session.explored.size<2)return;const right=m.world==='science'?(m.type==='gravity'?'cai':m.type==='daynight'?'dia':m.right):session.question.answer;if(value===right){session.resolved=true;if(session.wrongCount===0)session.firstTry++;session.feedback={kind:'right',text:m.world==='science'?(m.type==='gravity'?'Muito bem! A gravidade da Terra puxa a bola para baixo.':m.type==='daynight'?'O lado da Terra voltado para o Sol recebe luz e tem dia.':m.explain) : m.type==='curriculum'?session.question.explain:session.question.hint};logRecord();}else{if(session.wrongOptions.has(value))return;session.wrongCount++;session.errors++;session.wrongOptions.add(value);session.feedback={kind:'wrong',text:m.world==='science'?'Olhe de novo para o que aconteceu na experiência. Você consegue!':m.type==='curriculum'?'Observe bem o problema e tente outra alternativa. A explicação aparecerá quando acertar.':'Toque nos desenhos para marcar e conte um a um. Depois escolha outra resposta.'};}render()}
-function next(){if(!session||!session.resolved)return;session.step++;if(session.step>=session.mission.questions){const m=session.mission;session.stars=Math.max(1,Math.min(3,Math.ceil(session.firstTry/m.questions*3)));const prev=data.missions[m.id];data.missions[m.id]={stars:Math.max(prev?.stars||0,session.stars),lastStars:session.stars,completedAt:new Date().toISOString()};save();view='result';render();window.scrollTo({top:0,behavior:'instant'});}else{session.question=generateQuestion(session.mission);session.wrongCount=0;session.wrongOptions.clear();session.feedback=null;session.resolved=false;session.marked.clear();render();}}
+function next(){if(!session||!session.resolved)return;session.step++;if(session.step>=session.mission.questions){const m=session.mission;session.stars=Math.max(1,Math.min(3,Math.ceil(session.firstTry/m.questions*3)));const prev=data.missions[m.id];data.missions[m.id]={stars:Math.max(prev?.stars||0,session.stars),lastStars:session.stars,completedAt:new Date().toISOString()};save();window.dispatchEvent(new Event('missao-aprender:mission-complete'));view='result';render();window.scrollTo({top:0,behavior:'instant'});}else{session.question=generateQuestion(session.mission);session.wrongCount=0;session.wrongOptions.clear();session.feedback=null;session.resolved=false;session.marked.clear();render();}}
 function openGate(){previousView=view;gateAnswer=random(5,9)+random(2,5);const a=random(5,9),b=random(2,5);gateAnswer=a+b;$('gate-root').innerHTML=`<div class="gate-backdrop" role="presentation"><form class="gate-modal" id="gate-form" aria-label="Acessar espaço dos responsáveis"><h2>👨‍👩‍👧 Espaço da família</h2><p>Uma continha rápida para evitar que esta área seja aberta sem querer.</p><label for="parent-gate-input"><strong>Quanto é ${a} + ${b}?</strong></label><input type="number" id="parent-gate-input" autocomplete="off" required inputmode="numeric"><div id="gate-error" class="gate-error" role="status"></div><div class="gate-actions"><button type="button" class="btn btn-outline" data-gate-close="1">Cancelar</button><button class="btn btn-primary" type="submit">Entrar</button></div></form></div>`;$('parent-gate-input').focus()}
 function closeGate(){$('gate-root').innerHTML=''}
 function enterParents(){if(parentAllowed){navigate('parents');return}openGate()}
@@ -194,7 +194,7 @@ document.addEventListener('click',e=>{const btn=e.target.closest('button');if(!b
  if(btn.dataset.drop){dropBall();return}
  if(btn.dataset.halfturn){halfTurn();return}
  if(btn.dataset.export){downloadProgress();return}
- if(btn.dataset.reset){if(confirm('Apagar o progresso desta versão unificada neste dispositivo? Os protótipos anteriores não serão apagados.')){data=fresh();save();render()}return}
+ if(btn.dataset.reset){if(storageScope!==STORAGE_KEY){alert('Para proteger resultados sincronizados, o apagamento na nuvem ainda não está disponível. Troque para o modo local.');return}if(confirm('Apagar o progresso local deste navegador?')){data=fresh();save();render()}return}
 });
 document.addEventListener('input',e=>{if(!session)return;if(e.target.id==='height'&&session.mission.type==='gravity'){
   session.height=Number(e.target.value);session.released=false;const b=document.querySelector('.gravity-ball');if(b){b.classList.remove('ground');b.style.setProperty('--ball-bottom',({1:77,2:126,3:168})[session.height]+'px')}const label=$('height-label');if(label)label.textContent=['','Baixa','Média','Alta'][session.height];
@@ -209,6 +209,8 @@ document.addEventListener('change',e=>{if(e.target.id==='settings-grade'){
  const pill=document.getElementById('grade-pill');if(pill)pill.textContent=`🎒 ${value}º ano`;
 }});
 document.addEventListener('submit',e=>{if(e.target.id!=='gate-form')return;e.preventDefault();if(Number($('parent-gate-input')?.value)===gateAnswer){parentAllowed=true;closeGate();navigate('parents')}else{$('gate-error').textContent='Confira a continha e tente novamente.';$('parent-gate-input').select()}});
+window.MissaoAprenderSyncBridge={legacyData:()=>load(),getData:()=>data,selectScope:(key,state)=>{storageScope=key||STORAGE_KEY;data=state||load();save();navigate('home')},getScope:()=>storageScope};
+window.dispatchEvent(new Event('missao-aprender:ready'));
 window.MissaoAprenderTest={MISSIONS,WORLDS,SKILLS,makeQuestion,fresh,getData:()=>data,getView:()=>view,generateQuestion,worldMissions,getCurrentAnswer:()=>session?.question?.answer||session?.mission?.right||null};
 render();
 })();
