@@ -60,3 +60,25 @@ Testes: `node --test tests/*.test.mjs`, `python test_unificado.py`, `python test
 Este pacote exclui arquivos temporários, capturas de tela de teste e bytecode Python. O site em produção permanece na Vercel e **a publicação atual pela API não estabelece integração automática com o GitHub**. Depois de criar o repositório, vincule-o explicitamente ao projeto Vercel existente, quando estiver pronto para automatizar deploys. Não crie um segundo projeto Vercel desnecessariamente.
 
 Este código foi preparado para um repositório privado inicialmente. Nenhuma licença de código aberto foi escolhida automaticamente.
+
+## Fase 2 — sincronização por perfil infantil (branch de homologação)
+
+**Não publicada em produção.** Ative a branch de teste `feat/fase2-progresso-sincronizado` e a branch Neon `fase2-progresso-homologacao`. A migration de referência é `database/2026-11-15_fase2_progresso.sql`; não executá-la na branch Neon de produção sem homologação.
+
+- Responsável precisa entrar em `/conta.html` antes de selecionar a criança na página principal.
+- Cada perfil tem um armazenamento local próprio, identificado por conta autenticada e UUID do perfil. O antigo progresso anônimo é preservado em `missao-aprender-unificado-v1` e só pode ser importado com confirmação explícita.
+- A API `GET /api/progresso?perfil_id=<uuid>` e `PUT /api/progresso` exige JWT válido e só utiliza o identificador do usuário obtido pela verificação de assinatura.
+- No Neon, `missao.estados_aprendizagem` contém um snapshot de aprendizagem por perfil, com `revisao` para escrita otimista (conflito 409); `missao_api.ler_progresso` e `missao_api.salvar_progresso` conferem propriedade do perfil no banco. Sem acesso direto da role de API à tabela; RLS/FORCE RLS ativas.
+- O cliente tenta mesclar progresso entre aparelhos e retém a cópia local quando a rede falha; eventos com `eventId` não se duplicam. O app sincroniza ao concluir missão e permite sincronização manual.
+- Dados de conclusão e estrelas são autorreportados pelo cliente e **não podem ser usados para placares competitivos, recompensas externas ou avaliações confiáveis** sem validação no servidor. A futura Arena exigirá um fluxo próprio de tentativas validadas.
+- `progresso_atividades` e `tentativas` existentes continuam disponíveis para a futura normalização de eventos. A Fase 2 usa snapshot JSONB para preservar o histórico e os campos completos do app.
+- Não desabilita login, RLS ou proteção das prévias, não altera o app SGO.
+
+### Testes antes de homologação
+
+1. `npm test` e `python test_unificado.py` / `python tests/test_novas_missoes.py`
+2. Banco de homologação: leitor isolado, gravação revisionada, conflito de revisão, tentativa de acesso a filho alheio, sem SELECT direto.
+3. Homologação **real** em dois navegadores: entrar como responsável, selecionar o mesmo filho, concluir uma missão, sincronizar, atualizar o outro aparelho, importar legado com autorização e simular falha de rede.
+4. Verificar login e funcionamento da prévia com Neon Auth da branch de homologação, confirmar que a branch de produção e o `main` permanecem inalterados.
+
+> Atenção: não ativar cadastros externos, torneios ou importação automática de progresso compartilhado.
