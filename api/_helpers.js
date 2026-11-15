@@ -30,3 +30,9 @@ export function respostaJson(res, status, body) {
   res.setHeader('X-Content-Type-Options','nosniff');
   return res.status(status).json(body);
 }
+
+export function validarEmailConvite(value) {
+  if (typeof value !== 'string') return null;
+  const email = value.trim().toLowerCase();
+  return email.length <= 180 && /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(email) ? email : null;
+}

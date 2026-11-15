@@ -102,6 +102,16 @@
               <div><strong id="admin-grupos">0</strong><small>Grupos</small></div>
               <div><strong id="admin-desafios">0</strong><small>Desafios</small></div>
             </div><p class="account-help">Catálogo: 140 missões disponíveis. A contagem do banco se refere a uma tabela separada do catálogo. Cadastros públicos, grupos e rankings permanecem desativados. A sincronização do progresso é opcional por perfil.</p>
+            <div id="admin-gestao-convites" class="admin-invites">
+              <h4>✉️ Convites para o grupo piloto</h4>
+              <p class="account-help">Cadastro fechado: registre o e-mail de um responsável. A conta precisa ser criada pelo administrador no Neon Auth; nenhum e-mail é enviado automaticamente.</p>
+              <form id="form-convite" class="account-form admin-invite-form">
+                <label>E-mail do responsável convidado<input name="email" type="email" autocomplete="off" maxlength="180" required placeholder="responsavel@exemplo.com"></label>
+                <button class="btn account-primary" type="submit">Adicionar à lista</button>
+              </form>
+              <p id="admin-alerta-convites" role="status" aria-live="polite" class="account-help"></p>
+              <div id="admin-lista-convites" class="admin-invite-list" aria-live="polite"></div>
+            </div>
           </section>
           <div id="lista-perfis" class="profiles-grid" aria-live="polite"></div>
           <div class="new-profile-box">

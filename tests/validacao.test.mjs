@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validarPerfil, validarId, autorizadoParaCriar, extrairBearer } from '../api/_helpers.js';
+import { validarPerfil, validarId, autorizadoParaCriar, extrairBearer, validarEmailConvite } from '../api/_helpers.js';
 
 test('perfis válidos são aceitos sem coletar identificação pessoal',()=>{
  const v=validarPerfil({apelido:'  Meu   Robô ',avatar:'robo',ano_escolar:1});
@@ -22,4 +22,9 @@ test('valida IDs e cabeçalho Bearer',()=>{
  assert.equal(extrairBearer('Bearer a.b_c-D'), 'a.b_c-D');
  assert.equal(extrairBearer('Basic aaa'), null);
  assert.equal(extrairBearer('Bearer '), null);
+});
+
+test('validar e-mail de convite sem permitir entrada maliciosa',()=>{
+ assert.equal(validarEmailConvite('  EXEMPLO@EMAIL.COM  '),'exemplo@email.com');
+ for(const v of [null,undefined,'','a@b','nome<>@email.com','a@b.com\nX:injecao',5]) assert.equal(validarEmailConvite(v),null);
 });
