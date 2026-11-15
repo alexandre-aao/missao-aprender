@@ -52,6 +52,41 @@ function renderProfiles(){
   }
 }
 async function loadProfiles(){const result=await api('/api/perfis');profiles=result.perfis||[];renderProfiles();}
+async function loadInvitations(){
+  const root=$('admin-lista-convites');root.replaceChildren();
+  const r=await api('/api/convites');
+  const convites=Array.isArray(r.convites)?r.convites:[];
+  if(!convites.length){const p=document.createElement('p');p.className='account-help';p.textContent='Ainda não existem convites registrados.';root.append(p);return;}
+  for(const convite of convites){
+    const item=document.createElement('div');item.className='admin-invite-card';
+    const details=document.createElement('div');
+    const mail=document.createElement('strong');mail.textContent=convite.email;
+    const state=document.createElement('small');
+    const labels={pendente:'Aguardando conta no Neon Auth',conta_criada:'Conta criada — pronto para primeiro acesso',cancelado:'Cancelado',expirado:'Convite expirado'};
+    state.textContent=labels[convite.estado]||'Situação indisponível';
+    details.append(mail,state);item.append(details);
+    const actions=document.createElement('div');actions.className='account-actions';
+    if(convite.estado==='conta_criada'){
+      const copy=document.createElement('button');copy.type='button';copy.className='account-outline';copy.textContent='Copiar instruções';
+      copy.onclick=async()=>{try{await navigator.clipboard.writeText('Olá! Você recebeu acesso ao Missão Aprender. Entre em '+location.origin+'/conta.html com o e-mail '+convite.email+'. No primeiro acesso, use "Esqueci minha senha / Primeiro acesso" para receber um código e criar sua senha. Depois cadastre o perfil do seu filho com um apelido e um avatar.');$('admin-alerta-convites').textContent='Instruções copiadas para envio ao responsável.';}catch{$('admin-alerta-convites').textContent='Não foi possível copiar. Confira a permissão da área de transferência.';}};
+      actions.append(copy);
+    }
+    if(convite.estado==='pendente'||convite.estado==='expirado'){
+      const cancel=document.createElement('button');cancel.type='button';cancel.className='account-outline';cancel.textContent='Cancelar';
+      cancel.onclick=async()=>{if(!confirm('Cancelar o convite pendente?'))return;cancel.disabled=true;try{await api('/api/convites','DELETE',{id:convite.id});await loadInvitations();$('admin-alerta-convites').textContent='Convite cancelado.';}catch(err){$('admin-alerta-convites').textContent=err.message;}finally{cancel.disabled=false;}};
+      actions.append(cancel);
+    }
+    item.append(actions);root.append(item);
+  }
+}
+
+$('form-convite').onsubmit=async event=>{
+  event.preventDefault();const form=event.currentTarget;busy(form,true);$('admin-alerta-convites').textContent='';
+  try{const email=String(new FormData(form).get('email')||'').trim();await api('/api/convites','POST',{email});form.reset();await loadInvitations();$('admin-alerta-convites').textContent='E-mail autorizado registrado. A conta deve ser criada no Neon Auth antes de enviar as instruções.';}
+  catch(err){$('admin-alerta-convites').textContent=err.message||'Não foi possível registrar o convite.';}
+  finally{busy(form,false);}
+};
+
 async function loadAdmin(){
   const admin=$('painel-admin');admin.hidden=true;
   try{
@@ -62,6 +97,7 @@ async function loadAdmin(){
     for(const id of ['responsaveis','perfis','atividades','grupos','desafios']){
       const element=$('admin-'+id);if(element)element.textContent=Number(result.estatisticas?.[id]||0).toLocaleString('pt-BR');
     }
+    try{await loadInvitations();}catch(e){$('admin-alerta-convites').textContent='Gestão de convites indisponível: '+e.message;}
   }catch{ /* Quem não possui permissão nunca recebe dados administrativos. */ }
 }
 async function restore(fromLogin=false){
