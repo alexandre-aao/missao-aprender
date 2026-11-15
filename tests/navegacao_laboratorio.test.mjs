@@ -17,7 +17,7 @@ const result=new Function('session','nextMissionFrom','escapeHtml',functionSourc
 
 test('laboratório exige duas experiências antes da resposta',()=>{
  assert.match(source,/session\.explored\.size<2/);
- assert.match(source,/function scienceScene\\(/);
+ assert.match(source,/function scienceScene\(/);
  assert.match(source,/inquiry-comparison-prompt/);
  assert.match(source,/data-predict/);
 });
