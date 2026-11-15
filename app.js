@@ -27,11 +27,463 @@ const SCIENCE_DISCOVERIES=[
  {id:'c-sol',title:'O que é o Sol?',desc:'Compare o Sol e um planeta.',icon:'☀️',ask:'O Sol é…',choices:[['estrela','Uma estrela'],['planeta','Um planeta'],['lua','Uma lua']],right:'estrela',explain:'O Sol é uma estrela. A Terra é um planeta que orbita o Sol.',actions:[['☀️','Observar o Sol','☀️ ✨','O Sol produz sua própria luz. Nunca olhe diretamente para ele.'],['🌍','Observar a Terra','🌍 🌙','A Terra é um planeta, iluminado pelo Sol.']]},
  {id:'c-borboleta',title:'Vida da borboleta',desc:'Observe fases da metamorfose.',icon:'🦋',ask:'Qual animal aparece ao final dessa transformação?',choices:[['borboleta','Borboleta adulta'],['peixe','Peixe'],['passaro','Passarinho']],right:'borboleta',explain:'No ciclo ilustrado, a borboleta passa por ovo, lagarta, crisálida e borboleta adulta.',actions:[['🥚','Ver começo do ciclo','🥚 → 🐛','De um ovo nasce uma lagarta.'],['🦋','Ver etapa final','🐛 → 🟤 → 🦋','A lagarta forma uma crisálida, da qual emerge a borboleta adulta.']]}
 ].map(x=>({...x,world:'science',type:'discovery',questions:1}));
+
+// Investigações autorais de Ciências — referências e limites em docs/ciencias-referencias.md
+const SCIENCE_TOPICS={"corpo":"🫶 Corpo e cuidados","materiais":"🧪 Materiais e descobertas","vida":"🌿 Natureza e seres vivos","terra":"🌞 Terra, luz e tempo"};
+const SCIENCE_TOPIC_BY_ID={"c-gravidade":"terra","c-dia-noite":"terra","c-plantas":"vida","c-flutua":"materiais","c-ima":"materiais","c-sombras":"terra","c-som":"materiais","c-agua":"materiais","c-sol":"terra","c-borboleta":"vida"};
+const SCIENCE_INVESTIGATIONS=[
+  {
+    "id": "c-maos",
+    "topic": "corpo",
+    "title": "O segredo das mãos limpas",
+    "desc": "Compare duas formas de lavar as mãos.",
+    "icon": "🧼",
+    "reference": "EF01CI03",
+    "predictionPrompt": "Qual jeito você acha que remove mais sujeira?",
+    "predictions": [
+      "Água e sabão",
+      "Apenas água"
+    ],
+    "ask": "Por que usamos água e sabão para lavar as mãos?",
+    "choices": [
+      [
+        "limpar",
+        "Ajudam a remover sujeira e microrganismos"
+      ],
+      [
+        "colorir",
+        "Mudam a cor da pele"
+      ],
+      [
+        "dispensar",
+        "Dispensam o enxágue"
+      ]
+    ],
+    "right": "limpar",
+    "explain": "Água, sabão e fricção ajudam a remover sujeira e microrganismos. É importante esfregar as mãos e enxaguar bem.",
+    "actions": [
+      [
+        "🚿",
+        "Enxaguar só com água",
+        "👐💧",
+        "A água pode retirar parte da sujeira. Ela costuma remover menos do que água e sabão."
+      ],
+      [
+        "🧼",
+        "Esfregar com água e sabão",
+        "👐🫧✨",
+        "Ao esfregar e enxaguar com sabão, mais sujeira e microrganismos são removidos."
+      ]
+    ]
+  },
+  {
+    "id": "c-sentidos",
+    "topic": "corpo",
+    "title": "Detetive dos sentidos",
+    "desc": "Descubra como percebemos sons e cheiros.",
+    "icon": "👂",
+    "reference": "EF01CI02",
+    "predictionPrompt": "Para perceber o som de um sino, você usa principalmente…",
+    "predictions": [
+      "Os ouvidos",
+      "Os olhos"
+    ],
+    "ask": "Qual parte do corpo nos ajuda a perceber o som de um sino?",
+    "choices": [
+      [
+        "ouvidos",
+        "Os ouvidos"
+      ],
+      [
+        "nariz",
+        "O nariz"
+      ],
+      [
+        "joelhos",
+        "Os joelhos"
+      ]
+    ],
+    "right": "ouvidos",
+    "explain": "Os ouvidos percebem sons. O nariz ajuda a perceber cheiros, e os olhos ajudam a enxergar.",
+    "actions": [
+      [
+        "🔔",
+        "Observar um sino tocando",
+        "🔔 〰️ 👂",
+        "O sino vibra e produz som. Usamos os ouvidos para percebê-lo."
+      ],
+      [
+        "🍊",
+        "Observar uma laranja perfumada",
+        "🍊 🌼 👃",
+        "Substâncias no ar podem chegar ao nariz e permitir perceber o cheiro da laranja."
+      ]
+    ]
+  },
+  {
+    "id": "c-luz-materiais",
+    "topic": "materiais",
+    "title": "Por onde a luz passa?",
+    "desc": "Teste vidro transparente e papelão.",
+    "icon": "🪟",
+    "reference": "EF01CI01",
+    "predictionPrompt": "Qual material deixa mais luz atravessar?",
+    "predictions": [
+      "Vidro transparente",
+      "Papelão"
+    ],
+    "ask": "Por que enxergamos através de um vidro transparente e limpo?",
+    "choices": [
+      [
+        "luz",
+        "Porque permite a passagem de muita luz"
+      ],
+      [
+        "brilho",
+        "Porque cria luz própria"
+      ],
+      [
+        "solido",
+        "Porque é sempre mais quente"
+      ]
+    ],
+    "right": "luz",
+    "explain": "Um vidro transparente e limpo deixa muita luz atravessar. O papelão opaco bloqueia a passagem direta da luz.",
+    "actions": [
+      [
+        "🪟",
+        "Iluminar o vidro limpo",
+        "🔦 → 🪟 → 🌟",
+        "A luz atravessa o vidro transparente."
+      ],
+      [
+        "📦",
+        "Iluminar o papelão",
+        "🔦 → 📦 ▪️",
+        "O papelão opaco impede que a luz passe diretamente."
+      ]
+    ]
+  },
+  {
+    "id": "c-absorver",
+    "topic": "materiais",
+    "title": "Qual material bebe água?",
+    "desc": "Derrame água no desenho de dois materiais.",
+    "icon": "🧽",
+    "reference": "EF01CI01",
+    "predictionPrompt": "Qual deles absorve mais água?",
+    "predictions": [
+      "Esponja",
+      "Plástico liso"
+    ],
+    "ask": "Qual material costuma absorver água com facilidade?",
+    "choices": [
+      [
+        "esponja",
+        "Uma esponja comum"
+      ],
+      [
+        "plastico",
+        "Uma tampa de plástico liso"
+      ],
+      [
+        "vidro",
+        "Uma placa de vidro"
+      ]
+    ],
+    "right": "esponja",
+    "explain": "Uma esponja comum tem espaços que retêm água. Plástico liso e vidro geralmente não absorvem água da mesma forma.",
+    "actions": [
+      [
+        "🧽",
+        "Colocar gotas na esponja",
+        "💧 → 🧽",
+        "A água entra e fica retida em muitos espaços da esponja."
+      ],
+      [
+        "🥣",
+        "Colocar gotas no plástico liso",
+        "💧 ↗ 🥣",
+        "As gotas ficam na superfície ou escorrem. O plástico liso não costuma absorvê-las."
+      ]
+    ]
+  },
+  {
+    "id": "c-momentos",
+    "topic": "terra",
+    "title": "O relógio do dia",
+    "desc": "Explore manhã, tarde e noite.",
+    "icon": "🌅",
+    "reference": "EF01CI05",
+    "predictionPrompt": "Qual período costuma vir depois da manhã?",
+    "predictions": [
+      "Tarde",
+      "Noite"
+    ],
+    "ask": "Qual é a sequência de períodos de um dia?",
+    "choices": [
+      [
+        "ordem",
+        "Manhã, tarde e noite"
+      ],
+      [
+        "troca",
+        "Noite, tarde e manhã"
+      ],
+      [
+        "igual",
+        "Manhã, manhã e manhã"
+      ]
+    ],
+    "right": "ordem",
+    "explain": "Em um dia comum, distinguimos manhã, tarde e noite. Eles se repetem a cada novo dia.",
+    "actions": [
+      [
+        "🌅",
+        "Ver a manhã",
+        "🌅 🐦",
+        "Pela manhã, muitas pessoas iniciam suas atividades."
+      ],
+      [
+        "☀️",
+        "Ver a tarde",
+        "🏞️ ☀️",
+        "À tarde, ainda há luz do dia."
+      ],
+      [
+        "🌙",
+        "Ver a noite",
+        "🌃 ⭐",
+        "À noite, o Sol está abaixo do horizonte local e o céu geralmente escurece."
+      ]
+    ]
+  },
+  {
+    "id": "c-animais-horarios",
+    "topic": "vida",
+    "title": "A vida de dia e de noite",
+    "desc": "Observe animais com horários diferentes.",
+    "icon": "🦉",
+    "reference": "EF01CI06",
+    "predictionPrompt": "Qual animal costuma procurar alimento à noite?",
+    "predictions": [
+      "Coruja",
+      "Borboleta diurna"
+    ],
+    "ask": "Qual destes animais costuma ser mais ativo durante a noite?",
+    "choices": [
+      [
+        "coruja",
+        "Muitas espécies de coruja"
+      ],
+      [
+        "borboleta",
+        "Muitas borboletas comuns"
+      ],
+      [
+        "abelha",
+        "Muitas abelhas"
+      ]
+    ],
+    "right": "coruja",
+    "explain": "Muitas corujas são ativas à noite. Muitas borboletas e abelhas comuns são mais ativas durante o dia. Existem exceções.",
+    "actions": [
+      [
+        "🦉",
+        "Visitar a coruja à noite",
+        "🌙 🦉 🐁",
+        "Muitas espécies de coruja caçam quando está escuro."
+      ],
+      [
+        "🦋",
+        "Visitar a borboleta de dia",
+        "☀️ 🌼 🦋",
+        "Muitas borboletas comuns visitam flores durante o dia."
+      ]
+    ]
+  },
+  {
+    "id": "c-partes-planta",
+    "topic": "vida",
+    "title": "Raízes e folhas em ação",
+    "desc": "Veja o trabalho das partes da planta.",
+    "icon": "🌱",
+    "reference": "EF02CI06",
+    "predictionPrompt": "Que parte da planta costuma absorver água no solo?",
+    "predictions": [
+      "Raiz",
+      "Flor"
+    ],
+    "ask": "Qual é uma função das raízes de muitas plantas?",
+    "choices": [
+      [
+        "agua",
+        "Absorver água e sais minerais do solo"
+      ],
+      [
+        "som",
+        "Produzir sons para as folhas"
+      ],
+      [
+        "asas",
+        "Fazer a planta voar"
+      ]
+    ],
+    "right": "agua",
+    "explain": "As raízes de muitas plantas absorvem água e sais minerais. As folhas fazem fotossíntese com a energia da luz.",
+    "actions": [
+      [
+        "🌱",
+        "Observar as raízes",
+        "🌱⬇️💧",
+        "Muitas raízes retiram água e sais minerais do solo."
+      ],
+      [
+        "🍃",
+        "Observar as folhas",
+        "☀️ → 🍃",
+        "As folhas usam energia da luz na fotossíntese."
+      ]
+    ]
+  },
+  {
+    "id": "c-sombra-maior",
+    "topic": "terra",
+    "title": "A sombra muda de tamanho",
+    "desc": "Aproxime e afaste a lanterna no desenho.",
+    "icon": "🔦",
+    "reference": "EF02CI07",
+    "predictionPrompt": "Se a lanterna ficar mais perto do objeto, a sombra na parede tende a ficar…",
+    "predictions": [
+      "Maior",
+      "Menor"
+    ],
+    "ask": "Com a parede e o objeto parados, o que pode ocorrer ao aproximar a lanterna?",
+    "choices": [
+      [
+        "maior",
+        "A sombra na parede fica maior"
+      ],
+      [
+        "sumir",
+        "Toda sombra desaparece"
+      ],
+      [
+        "luz",
+        "O objeto começa a produzir luz"
+      ]
+    ],
+    "right": "maior",
+    "explain": "Em uma montagem simples, aproximar a fonte de luz do objeto pode aumentar a sombra na parede. Depende da posição dos elementos.",
+    "actions": [
+      [
+        "🔦",
+        "Lanterna perto do brinquedo",
+        "🔦 🧸 ➜ ███",
+        "A lanterna perto do brinquedo projeta uma sombra maior na parede."
+      ],
+      [
+        "↔️",
+        "Lanterna mais distante",
+        "🔦 ➜ ➜ 🧸 ▪️",
+        "Com a lanterna afastada e o objeto parado, a sombra na mesma parede fica menor."
+      ]
+    ]
+  },
+  {
+    "id": "c-superficies",
+    "topic": "terra",
+    "title": "Qual tecido esquenta mais?",
+    "desc": "Compare tecidos claros e escuros sob a luz.",
+    "icon": "🌞",
+    "reference": "EF02CI08",
+    "predictionPrompt": "Se o tecido e a luz forem iguais, qual cor costuma esquentar mais?",
+    "predictions": [
+      "Escura",
+      "Clara"
+    ],
+    "ask": "Em condições iguais, qual tecido geralmente absorve mais luz solar?",
+    "choices": [
+      [
+        "escuro",
+        "Tecido escuro"
+      ],
+      [
+        "claro",
+        "Tecido claro"
+      ],
+      [
+        "iguais",
+        "A cor nunca faz diferença"
+      ]
+    ],
+    "right": "escuro",
+    "explain": "Em geral, tecidos escuros absorvem mais luz solar do que tecidos claros do mesmo tipo. O aquecimento real também depende de outros fatores.",
+    "actions": [
+      [
+        "⬛",
+        "Observar tecido escuro",
+        "☀️ ↓ ⬛",
+        "Sob a mesma luz, o tecido escuro costuma absorver mais energia."
+      ],
+      [
+        "⬜",
+        "Observar tecido claro",
+        "☀️ ↓ ⬜",
+        "O tecido claro costuma refletir uma parte maior da luz."
+      ]
+    ]
+  },
+  {
+    "id": "c-reutilizar",
+    "topic": "materiais",
+    "title": "A missão do menos lixo",
+    "desc": "Compare dois hábitos do dia a dia.",
+    "icon": "♻️",
+    "reference": "EF01CI01",
+    "predictionPrompt": "Qual escolha gera menos copos descartados?",
+    "predictions": [
+      "Usar uma garrafinha reutilizável",
+      "Usar copos descartáveis novos"
+    ],
+    "ask": "Qual atitude pode reduzir o descarte de embalagens?",
+    "choices": [
+      [
+        "reuso",
+        "Usar uma garrafinha própria reutilizável"
+      ],
+      [
+        "descartar",
+        "Usar e jogar fora vários copos novos"
+      ],
+      [
+        "trocar",
+        "Pegar um copo novo para cada gole"
+      ]
+    ],
+    "right": "reuso",
+    "explain": "Usar e lavar adequadamente uma garrafinha própria pode reduzir os copos descartáveis. Separe resíduos conforme as regras locais.",
+    "actions": [
+      [
+        "🥤",
+        "Usar vários copos descartáveis",
+        "🥤 🥤 🥤 🗑️",
+        "Muitos copos usados uma única vez geram mais resíduos."
+      ],
+      [
+        "🚰",
+        "Usar garrafinha reutilizável",
+        "🫗 💧 ♻️",
+        "Uma garrafinha própria pode ser lavada e usada diversas vezes."
+      ]
+    ]
+  }
+].map(x=>({...x,world:'science',type:'investigation',questions:1}));
 const MISSIONS=[...BASE_MISSIONS,...SKILLS.map(s=>({
  id:s.id,world:s.grade==='P'?'review':'math',grade:s.grade,
  title:s.title,desc:s.desc,icon:unitIcons[s.unit]||'📚',
  type:'curriculum',questions:8,unit:s.unit,skill:s,bncc:s.bncc
-})),...SCIENCE_DISCOVERIES];
+})),...SCIENCE_DISCOVERIES,...SCIENCE_INVESTIGATIONS].map(m=>m.world==='science'?{...m,topic:m.topic||SCIENCE_TOPIC_BY_ID[m.id]||'materiais'}:m);
 const WORLDS={
  math:{name:'Matemática',subtitle:'Sua trilha principal do 1º ano',icon:'🔢',css:'math',label:'PRINCIPAL',detail:'Conte, junte e compare. Aprender matemática pode ser uma aventura.'},
  review:{name:'Revisão divertida',subtitle:'Aqueça seus superpoderes',icon:'🧸',css:'review',label:'AQUECIMENTO',detail:'Revisite os primeiros desafios e fortaleça suas habilidades, sem trocar o ano escolar.'},
