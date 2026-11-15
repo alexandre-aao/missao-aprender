@@ -192,3 +192,16 @@ test('uma atualização da nuvem mantém a conclusão visível e informa só est
  assert.match(html(),/Seu recorde de estrelas foi mantido/);
  assert.match(html(),/Voltar ao início/);
 });
+
+test('o início destaca a revisão e a contagem usa nomes genéricos',()=>{
+ const {click,html}=launch();
+ const home=html();
+ assert.ok(home.indexOf('data-nav="review"')<home.indexOf('aria-label="Boas-vindas"'));
+ assert.ok(home.indexOf('data-nav="science"')<home.indexOf('aria-label="Seu progresso"'));
+ assert.equal((home.match(/data-nav="review"/g)||[]).length,1);
+ for(const id of ['m-contar','p-contar']){
+  click({start:id});
+  assert.match(html(),/Quantos desenhos você vê\?/);
+  assert.doesNotMatch(html(),/tesouros/i);
+ }
+});

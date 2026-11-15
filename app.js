@@ -9,7 +9,7 @@ const {SKILLS,UNITS,YEARS}=CURRICULUM;
 const unitIcons=Object.fromEntries(Object.entries(UNITS).map(([k,v])=>[k,v.emoji]));
 let unitFilter='all';
 const BASE_MISSIONS=[
- {id:'m-contar',world:'math',title:'Conte os tesouros',desc:'Toque nos desenhos e descubra quantos existem.',icon:'🍎',type:'count',questions:4},
+ {id:'m-contar',world:'math',title:'Conte os desenhos',desc:'Toque nos desenhos e descubra quantos existem.',icon:'🍎',type:'count',questions:4},
  {id:'m-somar',world:'math',title:'Vamos somar?',desc:'Junte duas coleções para encontrar o total.',icon:'➕',type:'sum',questions:4},
  {id:'m-comparar',world:'math',title:'Quem tem mais?',desc:'Compare grupos e escolha o que tem mais.',icon:'⚖️',type:'compare',questions:4},
  {id:'p-contar',world:'review',title:'Conte até cinco',desc:'Uma revisão tranquila, com poucos objetos.',icon:'🧸',type:'preschool',questions:4},
@@ -965,7 +965,7 @@ const MISSIONS=[...BASE_MISSIONS,...SKILLS.map(s=>({
 })),...SCIENCE_DISCOVERIES,...SCIENCE_INVESTIGATIONS].map(m=>m.world==='science'?{...m,topic:m.topic||SCIENCE_TOPIC_BY_ID[m.id]||'materiais'}:m);
 const WORLDS={
  math:{name:'Matemática',subtitle:'Sua trilha principal do 1º ano',icon:'🔢',css:'math',label:'PRINCIPAL',detail:'Conte, junte e compare. Aprender matemática pode ser uma aventura.'},
- review:{name:'Revisão divertida',subtitle:'Aqueça seus superpoderes',icon:'🧸',css:'review',label:'AQUECIMENTO',detail:'Revisite os primeiros desafios e fortaleça suas habilidades, sem trocar o ano escolar.'},
+ review:{name:'Revisão da pré-escola',subtitle:'Conte, compare e reconheça formas',icon:'🧸',css:'review',label:'AQUECIMENTO',detail:'Revisite os primeiros desafios e fortaleça suas habilidades, sem trocar o ano escolar.'},
  science:{name:'Ciências',subtitle:'Laboratório de descobertas',icon:'🔬',css:'science',label:'EXPLORAR',detail:'Experiências interativas para observar e fazer descobertas.'}
 };
 const ICONS=['🍎','⭐','🐠','🍓','🍪','🚗','🦋'];
@@ -1011,28 +1011,29 @@ function totalStars(){return Object.values(data.missions).reduce((sum,x)=>sum+(N
 function numSolved(){return data.records.length}
 function firstTryPercent(){return numSolved()?Math.round(data.records.filter(x=>x.firstTry).length/numSolved()*100):0}
 function lastProgress(){return currentMissions().find(m=>!missionDone(m))||worldMissions('math')[0]||MISSIONS[0]}
-function worldCard(key){
+function worldCard(key,featured=false){
  const w=WORLDS[key],done=completed(key),all=worldMissions(key).length;
- return `<button type="button" class="world ${w.css}" data-nav="${key}" aria-label="Abrir ${escapeHtml(w.name)}">
- <span class="tag">${w.label}</span><span class="world-icon" aria-hidden="true">${w.icon}</span>
+ return `<button type="button" class="world ${w.css}${featured?' home-review':''}" data-nav="${key}" aria-label="Abrir ${escapeHtml(w.name)}">
+ ${featured?'':`<span class="tag">${w.label}</span>`}<span class="world-icon" aria-hidden="true">${w.icon}</span>
  <strong>${w.name}</strong><p>${key==='math'?`Descubra os números do ${data.grade}º ano`:w.subtitle}</p>
- <span class="world-link">${done} de ${all} missões · Explorar <span aria-hidden="true">→</span></span></button>`;
+ <span class="world-link">${done} de ${all} missões · ${featured?'Abrir revisão':'Explorar'} <span aria-hidden="true">→</span></span></button>`;
 }
 function homeView(){
  const next=lastProgress(),all=currentMissions(),done=all.filter(missionDone).length,pct=Math.round(done/Math.max(1,all.length)*100);
- return `<section class="hero hero-kids" aria-label="Boas-vindas">
+ return `${worldCard('review',true)}
+ <section class="hero hero-kids" aria-label="Boas-vindas">
  <div class="hero-content"><span class="eyebrow">OI, EXPLORADOR! ✨</span>
  <h1>Uma aventura<br>espera por você!</h1>
  <p>Pronto para brincar, pensar e descobrir algo novo?</p>
  <button type="button" class="btn btn-light hero-cta" data-start="${next.id}">🚀 ${missionDone(next)?'Jogar novamente':done||numSolved()?'Continuar aventura':'Começar: '+escapeHtml(next.title)}</button>
  ${done||numSolved()?`<span class="next-hint">Próxima: ${escapeHtml(next.title)}</span>`:''}</div>
  <span class="hero-mascot" aria-hidden="true">🧑‍🚀</span><span class="hero-planet" aria-hidden="true">🪐</span></section>
+ <div class="section-heading" id="mundos"><h2>Outras trilhas</h2></div>
+ <div class="world-grid home-worlds">${worldCard('math')}${worldCard('science')}</div>
  <section class="home-progress" aria-label="Seu progresso"><span class="home-progress-icon" aria-hidden="true">🌟</span>
  <div class="home-progress-copy"><strong>Olha só quanto você já explorou!</strong>
  <div class="meter" role="progressbar" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${all.length}" aria-label="Missões concluídas"><span style="width:${pct}%"></span></div>
  <small>${done} de ${all.length} missões concluídas · No seu ritmo</small></div></section>
- <div class="section-heading" id="mundos"><div><h2>Escolha seu mundo</h2><p>Qual aventura combina com você hoje?</p></div></div>
- <div class="world-grid">${worldCard('math')}${worldCard('review')}${worldCard('science')}</div>
  <div class="tip-banner"><span class="tip-icon" aria-hidden="true">💡</span><div><strong>Uma descoberta de cada vez</strong>
  <p>Você pode tentar de novo quantas vezes quiser. O importante é aprender se divertindo!</p></div></div>`;
 }
@@ -1040,7 +1041,7 @@ function adventuresView(){
  return `<div class="page-intro"><div><span class="eyebrow">SEU MAPA DE DESCOBERTAS</span>
  <h1>Para onde vamos? 🗺️</h1><p>Escolha um mundo para começar. Todas as aventuras podem ser revisitadas!</p></div>
  <span class="page-art" aria-hidden="true">🌈</span></div>
- <div class="world-grid adventures-grid">${worldCard('math')}${worldCard('review')}${worldCard('science')}</div>
+ <div class="world-grid adventures-grid">${worldCard('review')}${worldCard('math')}${worldCard('science')}</div>
  <div class="tip-banner"><span class="tip-icon" aria-hidden="true">🚀</span><div><strong>Seu ritmo, sua aventura</strong>
  <p>Escolha uma missão, ou volte àquela que você mais gostou.</p></div></div>`;
 }
@@ -1083,7 +1084,7 @@ function worldView(world){
 function choices(answer,limit){const s=new Set([Number(answer)]);for(let off of shuffle([-3,-2,-1,1,2,3,4,-4,5])){if(s.size===3)break;let n=Number(answer)+off;if(n>=0&&n<=limit)s.add(n)}for(let i=0;s.size<3&&i<=limit;i++)s.add(i);return shuffle([...s].slice(0,3).map(String))}
 function makeQuestion(m){const icon=pick(ICONS);let n=0,a=0,b=0,text='',hint='',answer='',parts=[],answers=[];
  if(m.type==='count'||m.type==='preschool'){
-   n=random(1,m.type==='preschool'?5:10);text=m.type==='preschool'?'Vamos contar! Quantos desenhos você vê?':'Quantos tesouros você consegue contar?';hint=`Conte com calma: há ${n} ${n===1?'desenho':'desenhos'} ao todo.`;answer=String(n);parts=[{icon,n}];answers=choices(n,m.type==='preschool'?8:13);
+   n=random(1,m.type==='preschool'?5:10);text='Quantos desenhos você vê?';hint=`Conte com calma: há ${n} ${n===1?'desenho':'desenhos'} ao todo.`;answer=String(n);parts=[{icon,n}];answers=choices(n,m.type==='preschool'?8:13);
  }else if(m.type==='sum'){
    a=random(1,5);b=random(1,10-a);n=a+b;text='Se juntarmos os dois grupos, quantos desenhos teremos?';hint=`Primeiro conte ${a}. Depois conte mais ${b}. No total são ${n}.`;answer=String(n);parts=[{icon,n:a},{icon,n:b}];answers=choices(n,13);
  }else if(m.type==='compare'){
