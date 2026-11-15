@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fcfaf4">
+  <meta name="description" content="Área privada dos responsáveis no Missão Aprender.">
+  <title>Conta e perfis | Missão Aprender</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🚀%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./conta.css">
+  <script type="module" src="./conta.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">🚀</div><div><strong>missão<span>aprender</span></strong><small>Pequenas descobertas, grandes ideias</small></div></div>
+      <nav aria-label="Navegação principal" class="side-nav">
+        <a href="./index.html" class="nav-button">🏠 Início</a>
+        <a href="./index.html" class="nav-button">🔢 Matemática e Ciências</a>
+        <a href="./conta.html" aria-current="page" class="nav-button active">👪 Conta e perfis</a>
+      </nav>
+      <div class="side-note"><span class="note-orbit">🔒</span><strong>Área dos responsáveis</strong><p>Somente pessoas responsáveis criam e administram perfis infantis.</p></div>
+    </aside>
+    <div class="app-main">
+      <header class="topbar"><div class="top-title"><small>MISSÃO APRENDER</small><strong>Conta e perfis infantis</strong></div><div class="top-right"><span class="grade-pill">🔒 Privado</span></div></header>
+      <main class="account-main">
+        <div class="account-banner"><span class="account-rocket">🪐</span><div><span class="eyebrow">ESPAÇO DA FAMÍLIA</span><h1>Uma aventura segura para aprender.</h1><p>Os pais criam a conta e escolhem um apelido e um avatar para cada criança. Não pedimos foto, telefone nem data de nascimento.</p></div></div>
+        <div id="alerta" class="account-alert" role="status" aria-live="polite" hidden></div>
+        <div id="carregando" class="account-panel"><p>Verificando sua conta…</p></div>
+        <section id="entrar" class="account-panel" hidden>
+          <h2>Entrar como responsável</h2>
+          <p class="account-help">Os coleguinhas não precisam de e-mail: cada perfil infantil fica vinculado à conta do pai, mãe ou responsável.</p>
+          <form id="form-entrar" class="account-form">
+            <label>E-mail do responsável<input name="email" type="email" autocomplete="email" required maxlength="180" placeholder="voce@exemplo.com"></label>
+            <label>Senha<input name="senha" type="password" autocomplete="current-password" required minlength="8" maxlength="128" placeholder="Sua senha"></label>
+            <button class="btn account-primary" type="submit">Entrar na minha conta</button>
+          </form>
+          <div class="account-recovery-actions">
+            <button id="abrir-recuperacao" type="button" class="account-link">Esqueci minha senha / Primeiro acesso</button>
+            <button id="reenviar-verificacao" type="button" class="account-link">Confirmar meu e-mail</button>
+          </div>
+          <div class="account-register">
+            <h3>Ainda não tem conta?</h3>
+            <p id="aviso-cadastro">A abertura de novas contas será ativada após a homologação da autenticação.</p>
+            <button id="abrir-cadastro" type="button" class="account-link" hidden>Quero me cadastrar</button>
+          </div>
+        </section>
+        <section id="recuperar" class="account-panel" hidden>
+          <h2>Recuperar acesso</h2>
+          <p class="account-help">Informe o e-mail cadastrado. Se houver uma conta, você receberá um código numérico para definir uma nova senha. Verifique também a pasta de spam.</p>
+          <form id="form-recuperar" class="account-form">
+            <label>E-mail do responsável<input type="email" name="email" autocomplete="email" maxlength="180" required></label>
+            <button type="submit" class="btn account-primary">Enviar código de recuperação</button>
+          </form>
+          <form id="form-recuperacao-codigo" class="account-form" hidden>
+            <label>Código recebido por e-mail<input type="text" name="codigo" inputmode="numeric" pattern="[0-9]{4,10}" maxlength="10" autocomplete="one-time-code" required></label>
+            <label>Nova senha<input type="password" name="senha" minlength="10" maxlength="128" autocomplete="new-password" required></label>
+            <label>Confirme a nova senha<input type="password" name="confirmacao" minlength="10" maxlength="128" autocomplete="new-password" required></label>
+            <button class="btn account-primary" type="submit">Confirmar código e nova senha</button>
+          </form><button type="button" id="reenviar-recuperacao" class="account-link">Reenviar código</button>
+          <button type="button" id="voltar-recuperacao" class="account-link">Voltar ao login</button>
+        </section>
+        <section id="nova-senha" class="account-panel" hidden>
+          <h2>Definir nova senha</h2>
+          <p class="account-help">Crie uma senha exclusiva para o Missão Aprender. O link é individual e tem validade limitada.</p>
+          <form id="form-nova-senha" class="account-form">
+            <label>Nova senha<input name="senha" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></label>
+            <label>Confirmar senha<input name="confirmacao" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></label>
+            <button type="submit" class="btn account-primary">Salvar nova senha</button>
+          </form>
+          <button type="button" id="voltar-nova-senha" class="account-link">Voltar ao login</button>
+        </section>
+        <section id="verificar" class="account-panel" hidden>
+          <h2>Confirmar meu e-mail</h2><p class="account-help">Digite o código enviado para <strong id="verificar-email"></strong>. Não compartilhe esse código.</p>
+          <form id="form-verificar" class="account-form"><label>Código recebido<input type="text" name="otp" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{4,10}" maxlength="10" required></label><button type="submit" class="btn account-primary">Confirmar código</button></form>
+          <button id="reenviar-codigo" type="button" class="account-link">Enviar novo código</button>
+          <button id="voltar-verificacao" type="button" class="account-link">Voltar ao login</button>
+        </section>
+        <section id="cadastrar" class="account-panel" hidden>
+          <h2>Criar conta de responsável</h2>
+          <p class="account-help">Use seu próprio e-mail. Após o cadastro, você precisará confirmá-lo para entrar.</p>
+          <form id="form-cadastrar" class="account-form">
+            <label>Como quer ser chamado?<input name="nome" autocomplete="name" required maxlength="80" minlength="2"></label>
+            <label>Seu e-mail<input name="email" type="email" autocomplete="email" required maxlength="180"></label>
+            <label>Crie uma senha<input name="senha" type="password" autocomplete="new-password" required minlength="10" maxlength="128"></label>
+            <button class="btn account-primary" type="submit">Criar minha conta</button>
+          </form>
+          <button id="voltar-entrar" type="button" class="account-link">Já tenho conta</button>
+        </section>
+        <section id="perfis" class="account-panel" hidden>
+          <div class="account-head"><div><span class="account-kicker">RESPONSÁVEL AUTENTICADO</span><h2>Perfis das crianças</h2><p class="account-help" id="usuario-logado"></p></div><button id="sair" class="account-outline" type="button">Sair</button></div>
+          <p class="account-help">Os apelidos e avatares não são públicos. Grupos e desafios com amigos permanecem desativados.</p>
+          <div class="admin-badge" id="role-info" aria-live="polite">Responsável</div>
+          <section id="painel-admin" class="new-profile-box" aria-label="Administração do sistema" hidden>
+            <h3>🛡️ Administração do Missão Aprender</h3>
+            <p class="account-help">Indicadores gerais; sem acesso ao conteúdo privado dos perfis de outras famílias.</p>
+            <div class="admin-metrics">
+              <div><strong id="admin-responsaveis">0</strong><small>Responsáveis</small></div>
+              <div><strong id="admin-perfis">0</strong><small>Perfis infantis</small></div>
+              <div><strong id="admin-atividades">0</strong><small>Atividades no banco</small></div>
+              <div><strong id="admin-grupos">0</strong><small>Grupos</small></div>
+              <div><strong id="admin-desafios">0</strong><small>Desafios</small></div>
+            </div><p class="account-help">Catálogo do aplicativo: 64 missões disponíveis. Cadastros públicos, grupos, rankings e sincronização de progresso permanecem desativados.</p>
+          </section>
+          <div id="lista-perfis" class="profiles-grid" aria-live="polite"></div>
+          <div class="new-profile-box">
+            <h3 id="titulo-form">Criar perfil infantil</h3>
+            <form id="form-perfil" class="account-form">
+              <input name="id" type="hidden">
+              <label>Apelido (evite o nome completo)<input name="apelido" maxlength="24" minlength="2" required placeholder="Ex.: Foguetinho"></label>
+              <div class="account-form-row">
+                <label>Avatar<select name="avatar" required><option value="astronauta">🚀 Astronauta</option><option value="robo">🤖 Robô</option><option value="estrela">🌟 Estrela</option><option value="foguete">🛸 Foguete</option><option value="planeta">🪐 Planeta</option><option value="dinossauro">🦕 Dinossauro</option></select></label>
+                <label>Etapa escolar<select name="ano_escolar" required><option value="0">Pré-escola</option><option value="1" selected>1º ano</option><option value="2">2º ano</option><option value="3">3º ano</option><option value="4">4º ano</option><option value="5">5º ano</option><option value="6">6º ano</option></select></label>
+              </div>
+              <div id="consentimento">
+                <label class="account-check"><input name="sou_responsavel" type="checkbox" required> Confirmo que sou responsável legal pela criança.</label>
+                <label class="account-check"><input name="aceito_dados" type="checkbox" required> <span>Autorizo o tratamento do apelido, avatar e progresso para fins de aprendizagem.<small>Não autorizo automaticamente grupos ou competições.</small></span></label>
+              </div>
+              <div class="account-actions"><button class="btn account-primary" type="submit" id="salvar-perfil">Salvar perfil</button><button type="button" id="cancelar-edicao" class="account-outline" hidden>Cancelar edição</button></div>
+            </form>
+          </div>
+          <p class="account-footnote">Nesta etapa, o histórico das 64 atividades continua no dispositivo. A sincronização do progresso será uma fase separada e só ocorrerá mediante consentimento apropriado.</p>
+        </section>
+      </main>
+      <footer>Projeto independente · Sem publicidade · Perfis privados por padrão</footer>
+    </div>
+  </div>
+</body>
+</html>

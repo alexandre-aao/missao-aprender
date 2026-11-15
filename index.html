@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fcfaf4">
+  <meta name="description" content="Missão Aprender: matemática e descobertas científicas para crianças do 1º ano, com revisão da pré-escola.">
+  <title>Missão Aprender | Matemática e Ciências · 86 missões</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🚀%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./curriculo.js"></script>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark" aria-hidden="true">🚀</div><div><strong>missão<span>aprender</span></strong><small>Pequenas descobertas, grandes ideias</small></div></div>
+      <nav aria-label="Navegação principal" class="side-nav">
+        <button type="button" data-nav="home" class="nav-button active"><span aria-hidden="true">🏠</span> Início</button>
+        <button type="button" data-nav="math" class="nav-button"><span aria-hidden="true">🔢</span> Matemática</button>
+        <button type="button" data-nav="review" class="nav-button"><span aria-hidden="true">🧸</span> Revisão pré-escola</button>
+        <button type="button" data-nav="science" class="nav-button"><span aria-hidden="true">🔬</span> Ciências</button>
+        <button type="button" data-nav="awards" class="nav-button"><span aria-hidden="true">🏆</span> Conquistas</button>
+        <a href="./conta.html" class="nav-button family-account">👪 Conta e perfis</a>
+      </nav>
+      <div class="side-note"><span class="note-orbit">🪐</span><strong>Aprenda no seu ritmo!</strong><p>Errar, tentar de novo e fazer perguntas também é aprender.</p></div>
+      <button type="button" id="parents-sidebar" class="parent-link">👨‍👩‍👧 Para a família <span aria-hidden="true">↗</span></button>
+    </aside>
+    <div class="app-main">
+      <header class="topbar">
+        <div class="top-title"><small>UMA AVENTURA DE CADA VEZ</small><strong id="section-name">Início</strong></div>
+        <div class="top-right"><span class="grade-pill" id="grade-pill">🎒 1º ano</span><span id="star-indicator" class="star-pill" title="Estrelas conquistadas">⭐ 0</span><button type="button" class="parent-top" id="parents-top">👨‍👩‍👧 <span>Família</span></button></div>
+      </header>
+      <main id="main" tabindex="-1" aria-live="polite"></main>
+      <footer>Feito com curiosidade e carinho · Sem anúncios · Progresso das missões ainda local neste dispositivo</footer>
+    </div>
+  </div>
+  <div id="gate-root"></div>
+</body>
+</html>
