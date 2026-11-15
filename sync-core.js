@@ -18,7 +18,7 @@ export function normalizarEstado(input) {
  assert(/^[1-6]$/.test(grade),'Ano escolar inválido.');
  const missions={};
  const missionKeys=Object.keys(input.missions);
- assert(missionKeys.length<=86,'Número de missões inválido.');
+ assert(missionKeys.length<=MISSIONS_SET.size,'Número de missões inválido.');
  for(const id of missionKeys){
   assert(MISSIONS_SET.has(id),'Atividade desconhecida.');
   const v=input.missions[id];assert(plain(v),'Resultado de missão inválido.');

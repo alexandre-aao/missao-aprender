@@ -5,9 +5,9 @@ import {emptyProgress,normalizarEstado,mesclarProgressos,profileStorageKey,hasPr
 
 const child='4c86d9ab-a156-42cc-86b1-160b529d6b44',user='416f19ef-9599-4465-b4ce-7345094a307a';
 const base=()=>({version:2,grade:'1',missions:{},skills:{},records:[],started:'2026-11-01T12:00:00.000Z',migrated:{}});
-test('catálogo mantém as 86 missões originais, sem identificadores repetidos',()=>{
- assert.equal(IDS_MISSOES.length,86);assert.equal(new Set(IDS_MISSOES).size,86);
- for(const id of ['m-contar','c-plantas','h01','a-m11'])assert.ok(IDS_MISSOES.includes(id));
+test('catálogo preserva as 86 originais e acrescenta 10 investigações',()=>{
+ assert.equal(IDS_MISSOES.length,96);assert.equal(new Set(IDS_MISSOES).size,96);
+ for(const id of ['m-contar','c-plantas','h01','a-m11','c-maos','c-sombra-maior','c-reutilizar'])assert.ok(IDS_MISSOES.includes(id));
 });
 test('estado inicial é serializável e não contém dados pessoais',()=>{
  const clean=normalizarEstado(emptyProgress());assert.deepEqual(clean.missions,{});assert.deepEqual(clean.records,[]);

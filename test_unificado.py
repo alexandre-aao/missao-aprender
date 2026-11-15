@@ -2,13 +2,15 @@ import re,json
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 P=Path(__file__).resolve().parent
-HTML=(P/'index.html').read_text(); CSS=(P/'style.css').read_text(); CUR=(P/'curriculo.js').read_text(); APP=(P/'app.js').read_text()
+HTML=(P/'index.html').read_text(); CSS=(P/'style.css').read_text()+'\n'+(P/'infantil.css').read_text(); CUR=(P/'curriculo.js').read_text(); APP=(P/'app.js').read_text()
 
 def document(store=None):
     payload=json.dumps(store or {})
     stub='<script>window.__testStore='+payload+';Object.defineProperty(window,"localStorage",{configurable:true,value:{getItem:k=>Object.prototype.hasOwnProperty.call(window.__testStore,k)?window.__testStore[k]:null,setItem:(k,v)=>{window.__testStore[k]=String(v)},removeItem:k=>{delete window.__testStore[k]}}});</script>'
     s=HTML.replace('<link rel="stylesheet" href="./style.css">','<style>'+CSS+'</style>')
-    s=s.replace('  <script src="./curriculo.js" defer></script>','').replace('  <script src="./app.js" defer></script>','')
+    s=s.replace('<link rel="stylesheet" href="./infantil.css">','')
+    for module in ('curriculo.js','app.js','sync-ui.js'):
+        s=s.replace(f'<script type="module" src="./{module}"></script>','')
     s=s.replace('</body>',stub+'<script>'+CUR+'</script><script>'+APP+'</script></body>')
     return s
 
@@ -19,8 +21,18 @@ def unlock(page):
     page.locator('#parent-gate-input').fill(str(a+b))
     page.locator('#gate-form button[type=submit]').click()
 
+def go_world(page,world):
+    page.locator('[data-nav="adventures"]').first.click()
+    page.locator(f'[data-nav="{world}"]').first.click()
+    page.locator('.mission-section').evaluate_all('(s)=>s.forEach(e=>e.open=true)')
+
+def start_mission(page,mission_id):
+    button=page.locator(f'[data-start="{mission_id}"]').first
+    button.evaluate("(el)=>{const d=el.closest('details');if(d)d.open=true}")
+    button.click()
+
 def solve_skill(page,skill_id):
-    page.locator(f'[data-start="{skill_id}"]').first.click()
+    start_mission(page,skill_id)
     assert page.locator('.curriculum-visual').count()==1
     for i in range(8):
         # find generator's correct answer from rendered question (for QA only, via instrumentation in app)
@@ -42,8 +54,8 @@ def main():
     desktop=browser.new_page(viewport={'width':1310,'height':900},accept_downloads=True)
     errors=[];desktop.on('pageerror',lambda e:errors.append(str(e)))
     desktop.set_content(document())
-    assert desktop.get_by_role('heading',name=re.compile('Todo dia')).count()==1
-    assert desktop.evaluate('window.MissaoAprenderTest.MISSIONS.length')==86
+    assert desktop.get_by_role('heading',name=re.compile('Uma aventura')).count()==1
+    assert desktop.evaluate('window.MissaoAprenderTest.MISSIONS.length')==96
     desktop.locator('[data-nav="math"]').first.click()
     assert desktop.locator('.mission-card').count()==30
     assert desktop.get_by_text('Contando até 20').count()==1
@@ -54,26 +66,26 @@ def main():
     desktop.screenshot(path=str(P/'desktop_unificado.png'),full_page=True)
     solve_skill(desktop,'h07')
     # Returns to math and changes to review
-    desktop.locator('[data-nav="review"]').first.click()
+    go_world(desktop,'review')
     assert desktop.locator('.mission-card').count()==10
     assert desktop.get_by_text('Contar até 10').count()==1
     # Original pilot math still works
-    desktop.locator('[data-nav="math"]').first.click()
-    desktop.locator('[data-start="m-somar"]').click()
+    go_world(desktop,'math')
+    start_mission(desktop,'m-somar')
     assert desktop.locator('.object-token').count()>1
-    desktop.locator('[data-nav="science"]').first.click()
-    desktop.locator('[data-start="c-dia-noite"]').click()
+    go_world(desktop,'science')
+    start_mission(desktop,'c-dia-noite')
     desktop.locator('[data-halfturn]').click()
     assert desktop.get_by_text('NO PONTINHO: NOITE',exact=False).count()==1
-    desktop.locator('[data-nav="science"]').first.click()
+    go_world(desktop,'science')
     unlock(desktop)
     assert desktop.get_by_text('Acompanhamento da família').count()==1
     assert desktop.locator('#settings-grade').input_value()=='1'
     desktop.locator('#settings-grade').select_option('3')
     assert desktop.locator('#grade-pill').inner_text()=='🎒 3º ano'
-    desktop.locator('[data-nav="math"]').first.click()
+    go_world(desktop,'math')
     assert desktop.locator('.mission-card').count()==7
-    desktop.locator('[data-nav="review"]').first.click()
+    go_world(desktop,'review')
     assert desktop.locator('.mission-card').count()==10
     # verify persisted state via new page and keep grade.
     store=desktop.evaluate('window.__testStore')
@@ -106,11 +118,11 @@ def main():
     mobile.locator('[data-nav="math"]').first.click()
     assert mobile.evaluate('window.innerWidth>=document.documentElement.scrollWidth-2')
     mobile.screenshot(path=str(P/'mobile_unificado.png'),full_page=True)
-    mobile.locator('[data-start="h07"]').click()
+    start_mission(mobile,'h07')
     assert mobile.evaluate('window.innerWidth>=document.documentElement.scrollWidth-2')
     mobile.screenshot(path=str(P/'mobile_exercicio.png'),full_page=True)
     assert not errors_mobile,errors_mobile
-    print('PASSOU: 86 missões/atividades, filtro, matemática, pré-escola, ciências, anos 1–6, migração, exportação e mobile')
+    print('PASSOU: 96 missões/atividades, filtro, matemática, pré-escola, ciências, anos 1–6, migração, exportação e mobile')
     browser.close()
 
 if __name__=='__main__':main()
