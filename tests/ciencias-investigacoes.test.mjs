@@ -93,14 +93,67 @@ test('investigações exigem previsão e dois testes antes da pergunta e persist
  assert.equal(Object.keys(context.MissaoAprenderTest.getData().missions).length,10);
 });
 
-test('missões antigas continuam sem exigir hipótese adicional',()=>{
+const CLASSIC_IDS=['c-plantas','c-flutua','c-ima','c-sombras','c-som','c-agua','c-sol','c-borboleta'];
+
+test('as oito clássicas agora têm hipótese, comparação e imagens próprias',()=>{
+ const {context}=launch();
+ for(const id of CLASSIC_IDS){
+   const m=context.MissaoAprenderTest.MISSIONS.find(item=>item.id===id);
+   assert.equal(m.type,'investigation',id);
+   assert.equal(m.predictions.length,2,id);
+   assert.ok(m.predictionPrompt.length>15,id);
+   assert.ok(m.comparePrompt.length>15,id);
+   assert.ok(m.actions.length>=2,id);
+   assert.equal(m.visuals.length,m.actions.length,id);
+   assert.ok(m.actions.every(a=>a.length===4),id);
+   assert.ok(m.choices.some(([value])=>value===m.right),id);
+   assert.ok(m.explain.length>35,id);
+ }
+});
+
+test('as oito clássicas só liberam a pergunta após hipótese e dois testes distintos',()=>{
  const {context,click,html}=launch();
- click({nav:'science'});click({start:'c-plantas'});
- assert.doesNotMatch(html(),/data-predict=/);
- click({explore:'0'});click({explore:'1'});
- assert.equal((html().match(/data-science-answer=/g)||[]).length,3);
- click({scienceAnswer:'agua'});click({next:'1'});
- assert.equal(context.MissaoAprenderTest.getView(),'result');
+ click({nav:'science'});
+ for(const id of CLASSIC_IDS){
+  const m=context.MissaoAprenderTest.MISSIONS.find(item=>item.id===id);
+  click({start:id});
+  assert.match(html(),/data-predict="0"/,id);
+  assert.doesNotMatch(html(),/data-science-answer=/,id);
+  click({explore:'0'});
+  assert.doesNotMatch(html(),/data-science-answer=/,id);
+  click({predict:'0'});
+  click({explore:'0'});
+  assert.match(html(),/classic-scene/,id);
+  assert.doesNotMatch(html(),/data-science-answer=/,id);
+  click({predict:'1'});
+  assert.match(html(),/class="inquiry-guess chosen" data-predict="0"/,id);
+  click({explore:'0'});
+  assert.doesNotMatch(html(),/data-science-answer=/,id);
+  click({explore:'1'});
+  assert.equal((html().match(/data-science-answer=/g)||[]).length,3,id);
+  assert.match(html(),/inquiry-comparison-prompt/,id);
+  const wrong=m.choices.find(([v])=>v!==m.right)[0];
+  click({scienceAnswer:wrong});
+  assert.match(html(),/feedback try-again/,id);
+  click({scienceAnswer:m.right});
+  click({next:'1'});
+  assert.equal(context.MissaoAprenderTest.getView(),'result',id);
+  assert.ok(context.MissaoAprenderTest.getData().missions[id].stars>=1,id);
+  click({nav:'science'});
+ }
+ assert.equal(context.MissaoAprenderTest.worldMissions('science').length,20);
+});
+
+test('revisão das clássicas mantém conquistas e IDs no progresso sincronizado',()=>{
+ const old=emptyProgress(),newer=emptyProgress();
+ old.missions['c-borboleta']={stars:3,lastStars:3};
+ old.missions['c-flutua']={stars:2,lastStars:2};
+ newer.missions['c-maos']={stars:1,lastStars:1};
+ const merged=mesclarProgressos(old,newer);
+ assert.equal(merged.missions['c-borboleta'].stars,3);
+ assert.equal(merged.missions['c-flutua'].stars,2);
+ assert.equal(merged.missions['c-maos'].stars,1);
+ assert.equal(IDS_MISSOES.length,96);
 });
 
 test('sincronização aceita o conjunto ampliado e a mesclagem conserva missões antigas',()=>{
