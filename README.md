@@ -95,3 +95,11 @@ O catálogo em `api/catalogo.js` e o limite de validação em `sync-core.js` for
 
 Referências e ressalvas: `docs/ciencias-referencias.md`. Teste automatizado: `node --test tests/ciencias-investigacoes.test.mjs`.
 
+
+## Ciências — modernização das 8 experiências clássicas
+
+As oito missões científicas clássicas (plantas, flutuação, ímãs, sombras, som, gelo, Sol e metamorfose) agora seguem o mesmo percurso investigativo das dez novas: **formular uma hipótese sem pontuação, observar pelo menos duas condições distintas, comparar, responder e receber explicação**.
+
+Elas ganharam cenas ilustradas próprias e perguntas de comparação. Algumas oferecem mais situações para explorar, como a Lua refletindo luz, o gelo voltando a congelar, a atração por ímãs e a crisálida da borboleta. As explicações foram ajustadas para evitar generalizações científicas incorretas.
+
+Continuam sendo **96 missões, 20 de Ciências**: 18 investigações guiadas e 2 simulações com controles (gravidade e dia/noite). Os oito IDs, o progresso já salvo, as estrelas e a sincronização por perfil não foram alterados. Não houve migração no Neon nem inclusão de dependências.
