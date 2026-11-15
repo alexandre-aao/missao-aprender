@@ -1,6 +1,6 @@
-# Missão Aprender — v1.1 — expansão curricular
+# Missão Aprender — 96 missões, com experiências investigativas
 
-Projeto educacional independente. Contém **86 atividades/missões** (72 atividades matemáticas + 14 missões interativas). Prioriza Matemática 1º ano e revisão da pré-escola, com exploração de Ciências.
+Projeto educacional independente. Contém **96 missões**: 76 atividades de matemática/revisão e 20 experiências de Ciências (incluindo 10 investigações com hipóteses). Prioriza Matemática 1º ano e revisão da pré-escola, com exploração de Ciências.
 
 Produção: https://missao-aprender.vercel.app
 Área dos responsáveis: https://missao-aprender.vercel.app/conta.html
@@ -12,7 +12,7 @@ Produção: https://missao-aprender.vercel.app
 - Branch `desenvolvimento-auth` permanece como histórico de testes, não é usada pela produção.
 - Conta adulta inicial é administradora na tabela protegida `missao.administradores`; o perfil infantil permanece como aluno.
 - Cadastro público desativado no Neon e na UI; outros responsáveis ainda não podem abrir conta.
-- Progressão de atividades no `localStorage` por dispositivo; **não** há sincronização com o banco e não há campeonatos online implementados.
+- Progresso local preservado no `localStorage`, com sincronização opcional entre dispositivos por perfil infantil autenticado; não há campeonatos online implementados.
 - O painel administrativo mostra indicadores gerais e verifica a permissão no servidor. Não dá acesso à informação privada de outras famílias.
 
 ## Instalação
@@ -35,7 +35,7 @@ Use Node 22+ e configure as variáveis descritas em `.env.example` diretamente n
 
 ## Verificações
 
-- `python test_unificado.py`: 86 missões, filtros, matemática, pré-escola, ciências, anos 1–6, exportação e mobile.
+- `python test_unificado.py`: catálogo de missões, filtros, matemática, pré-escola, ciências, anos 1–6, exportação e mobile.
 - `node --test tests/*.test.mjs`: validações de perfis e cabeçalhos.
 - `python tests/test_admin_ui.py`: renderização em desktop e mobile, conta, painel admin e cadastro em simulação.
 - Testes de banco: administrador inicial permitido; outro usuário bloqueado; role da API sem acesso direto à tabela administrativa.
@@ -82,3 +82,16 @@ Este código foi preparado para um repositório privado inicialmente. Nenhuma li
 4. Verificar login e funcionamento da prévia com Neon Auth da branch de homologação, confirmar que a branch de produção e o `main` permanecem inalterados.
 
 > Atenção: não ativar cadastros externos, torneios ou importação automática de progresso compartilhado.
+
+## Ciências: 10 novas investigações (novembro de 2026)
+
+A versão atual possui **20 missões de Ciências** e **96 missões ao todo**; quando o ano principal é o 1º ano, há 30 de matemática, 10 de revisão e 20 de Ciências (60 opções).
+
+As 10 investigações adicionam a sequência de exploração: **prever sem pontuação → observar ao menos duas situações distintas → comparar → responder → receber explicação**. A hipótese não é julgada como erro/acerto. São **modelos ilustrativos**, não simulações físicas quantitativas, e não pedem que a criança manipule objetos, produtos de limpeza, água quente ou eletricidade na vida real.
+
+Temas: lavar as mãos, sentidos, materiais e luz, absorção de água, manhã/tarde/noite, hábitos dos animais, partes da planta, tamanhos de sombra, aquecimento de tecidos e reutilização de objetos. As 10 missões anteriores permanecem acessíveis e com seus IDs intactos.
+
+O catálogo em `api/catalogo.js` e o limite de validação em `sync-core.js` foram expandidos sem mudar o formato do progresso. A sincronização entre dispositivos continua restrita a perfis do responsável autenticado; dados de partidas não são verificados para uso em rankings.
+
+Referências e ressalvas: `docs/ciencias-referencias.md`. Teste automatizado: `node --test tests/ciencias-investigacoes.test.mjs`.
+
