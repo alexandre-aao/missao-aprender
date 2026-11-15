@@ -9,16 +9,16 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🚀%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="./conta.css">
+  <link rel="stylesheet" href="./infantil.css">
   <script type="module" src="./conta.js"></script>
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand"><div class="brand-mark">🚀</div><div><strong>missão<span>aprender</span></strong><small>Pequenas descobertas, grandes ideias</small></div></div>
-      <nav aria-label="Navegação principal" class="side-nav">
-        <a href="./index.html" class="nav-button">🏠 Início</a>
-        <a href="./index.html" class="nav-button">🔢 Matemática e Ciências</a>
-        <a href="./conta.html" aria-current="page" class="nav-button active">👪 Conta e perfis</a>
+      <nav aria-label="Navegação da área familiar" class="side-nav account-nav">
+        <a href="./index.html" class="nav-button"><span aria-hidden="true">🏠</span><span class="nav-label">Voltar ao início</span></a>
+        <a href="./conta.html" aria-current="page" class="nav-button active"><span aria-hidden="true">👪</span><span class="nav-label">Conta e perfis</span></a>
       </nav>
       <div class="side-note"><span class="note-orbit">🔒</span><strong>Área dos responsáveis</strong><p>Somente pessoas responsáveis criam e administram perfis infantis.</p></div>
     </aside>
@@ -101,7 +101,7 @@
               <div><strong id="admin-atividades">0</strong><small>Atividades no banco</small></div>
               <div><strong id="admin-grupos">0</strong><small>Grupos</small></div>
               <div><strong id="admin-desafios">0</strong><small>Desafios</small></div>
-            </div><p class="account-help">Catálogo do aplicativo: 64 missões disponíveis. Cadastros públicos, grupos, rankings e sincronização de progresso permanecem desativados.</p>
+            </div><p class="account-help">Catálogo do aplicativo: 86 missões disponíveis. Cadastros públicos, grupos e rankings permanecem desativados. A sincronização do progresso é opcional por perfil.</p>
           </section>
           <div id="lista-perfis" class="profiles-grid" aria-live="polite"></div>
           <div class="new-profile-box">
@@ -120,7 +120,7 @@
               <div class="account-actions"><button class="btn account-primary" type="submit" id="salvar-perfil">Salvar perfil</button><button type="button" id="cancelar-edicao" class="account-outline" hidden>Cancelar edição</button></div>
             </form>
           </div>
-          <p class="account-footnote">Nesta etapa, o histórico das 64 atividades continua no dispositivo. A sincronização do progresso será uma fase separada e só ocorrerá mediante consentimento apropriado.</p>
+          <p class="account-footnote">O progresso é preservado no dispositivo e pode ser sincronizado por perfil infantil quando o responsável autoriza. Grupos e competições continuam desativados.</p>
         </section>
       </main>
       <footer>Projeto independente · Sem publicidade · Perfis privados por padrão</footer>
