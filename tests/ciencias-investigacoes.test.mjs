@@ -33,9 +33,9 @@ function launch(){
  return {context,click,html,store};
 }
 
-test('catálogo cresce de 86 para 96 preservando identificadores anteriores',()=>{
- assert.equal(IDS_MISSOES.length,96);
- assert.equal(new Set(IDS_MISSOES).size,96);
+test('catálogo ampliado preserva os identificadores das 96 missões de origem',()=>{
+ assert.equal(IDS_MISSOES.length,140);
+ assert.equal(new Set(IDS_MISSOES).size,140);
  for(const id of NEW_IDS)assert.ok(IDS_MISSOES.includes(id),id);
  for(const id of ['c-gravidade','c-dia-noite','c-plantas','c-borboleta','h01','a-m11'])assert.ok(IDS_MISSOES.includes(id),id);
  const {context}=launch();
@@ -153,7 +153,7 @@ test('revisão das clássicas mantém conquistas e IDs no progresso sincronizado
  assert.equal(merged.missions['c-borboleta'].stars,3);
  assert.equal(merged.missions['c-flutua'].stars,2);
  assert.equal(merged.missions['c-maos'].stars,1);
- assert.equal(IDS_MISSOES.length,96);
+ assert.equal(IDS_MISSOES.length,140);
 });
 
 test('sincronização aceita o conjunto ampliado e a mesclagem conserva missões antigas',()=>{
@@ -166,7 +166,7 @@ test('sincronização aceita o conjunto ampliado e a mesclagem conserva missões
  assert.equal(merged.missions['c-maos'].stars,2);
  const all=emptyProgress();
  for(const id of IDS_MISSOES)all.missions[id]={stars:1};
- assert.equal(Object.keys(normalizarEstado(all).missions).length,96);
+ assert.equal(Object.keys(normalizarEstado(all).missions).length,140);
 });
 
 test('uma atualização da nuvem mantém a conclusão visível e informa só estrelas novas',()=>{
@@ -193,7 +193,7 @@ test('uma atualização da nuvem mantém a conclusão visível e informa só est
  assert.match(html(),/Voltar ao início/);
 });
 
-test('o início destaca a revisão e a contagem usa nomes genéricos',()=>{
+test('o início destaca a revisão e a contagem nomeia as figuras',()=>{
  const {click,html}=launch();
  const home=html();
  assert.ok(home.indexOf('data-nav="review"')<home.indexOf('aria-label="Boas-vindas"'));
@@ -201,7 +201,7 @@ test('o início destaca a revisão e a contagem usa nomes genéricos',()=>{
  assert.equal((home.match(/data-nav="review"/g)||[]).length,1);
  for(const id of ['m-contar','p-contar']){
   click({start:id});
-  assert.match(html(),/Quantos desenhos você vê\?/);
+  assert.match(html(),/Quant[oa]s (maçãs|estrelas|peixes|morangos|biscoitos|carrinhos|borboletas) você vê\?/);
   assert.doesNotMatch(html(),/tesouros/i);
  }
 });

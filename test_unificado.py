@@ -1,18 +1,28 @@
-import re,json
+import re,json,os,tempfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 P=Path(__file__).resolve().parent
-HTML=(P/'index.html').read_text(); CSS=(P/'style.css').read_text()+'\n'+(P/'infantil.css').read_text(); CUR=(P/'curriculo.js').read_text(); APP=(P/'app.js').read_text()
+HTML=(P/'index.html').read_text(); CSS=(P/'style.css').read_text()+'\n'+(P/'infantil.css').read_text(); SCRIPTS=('curriculo.js','novos-mundos.js','novas-atividades.js','app.js')
+CORE=''.join('<script>'+ (P/name).read_text()+'</script>' for name in SCRIPTS)
 
 def document(store=None):
     payload=json.dumps(store or {})
     stub='<script>window.__testStore='+payload+';Object.defineProperty(window,"localStorage",{configurable:true,value:{getItem:k=>Object.prototype.hasOwnProperty.call(window.__testStore,k)?window.__testStore[k]:null,setItem:(k,v)=>{window.__testStore[k]=String(v)},removeItem:k=>{delete window.__testStore[k]}}});</script>'
     s=HTML.replace('<link rel="stylesheet" href="./style.css">','<style>'+CSS+'</style>')
     s=s.replace('<link rel="stylesheet" href="./infantil.css">','')
-    for module in ('curriculo.js','app.js','sync-ui.js'):
+    for module in (*SCRIPTS,'sync-ui.js'):
         s=s.replace(f'<script type="module" src="./{module}"></script>','')
-    s=s.replace('</body>',stub+'<script>'+CUR+'</script><script>'+APP+'</script></body>')
+    s=s.replace('</body>',stub+CORE+'</body>')
     return s
+
+def launch_chromium(playwright):
+    executable=os.environ.get('MISSAO_CHROMIUM')
+    return playwright.chromium.launch(headless=True,executable_path=executable,args=['--no-sandbox'])
+
+def screenshot(page,name,full_page=False):
+    folder=Path(os.environ.get('MISSAO_EVIDENCIAS',tempfile.gettempdir()))
+    folder.mkdir(parents=True,exist_ok=True)
+    page.screenshot(path=str(folder/name),full_page=full_page)
 
 def unlock(page):
     page.locator('#parents-top').click()
@@ -50,12 +60,12 @@ def solve_skill(page,skill_id):
 
 def main():
   with sync_playwright() as p:
-    browser=p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+    browser=launch_chromium(p)
     desktop=browser.new_page(viewport={'width':1310,'height':900},accept_downloads=True)
     errors=[];desktop.on('pageerror',lambda e:errors.append(str(e)))
     desktop.set_content(document())
     assert desktop.get_by_role('heading',name=re.compile('Uma aventura')).count()==1
-    assert desktop.evaluate('window.MissaoAprenderTest.MISSIONS.length')==96
+    assert desktop.evaluate('window.MissaoAprenderTest.MISSIONS.length')==140
     desktop.locator('[data-nav="math"]').first.click()
     assert desktop.locator('.mission-card').count()==30
     assert desktop.get_by_text('Contando até 20').count()==1
@@ -63,7 +73,7 @@ def main():
     assert desktop.locator('.mission-card').count()==3
     desktop.locator('[data-unit="all"]').click()
     assert desktop.locator('.mission-card').count()==30
-    desktop.screenshot(path=str(P/'desktop_unificado.png'),full_page=True)
+    screenshot(desktop,'desktop_unificado.png',full_page=True)
     solve_skill(desktop,'h07')
     # Returns to math and changes to review
     go_world(desktop,'review')
@@ -117,12 +127,12 @@ def main():
     assert mobile.evaluate('window.innerWidth>=document.documentElement.scrollWidth-2')
     mobile.locator('[data-nav="math"]').first.click()
     assert mobile.evaluate('window.innerWidth>=document.documentElement.scrollWidth-2')
-    mobile.screenshot(path=str(P/'mobile_unificado.png'),full_page=True)
+    screenshot(mobile,'mobile_unificado.png',full_page=True)
     start_mission(mobile,'h07')
     assert mobile.evaluate('window.innerWidth>=document.documentElement.scrollWidth-2')
-    mobile.screenshot(path=str(P/'mobile_exercicio.png'),full_page=True)
+    screenshot(mobile,'mobile_exercicio.png',full_page=True)
     assert not errors_mobile,errors_mobile
-    print('PASSOU: 96 missões/atividades, filtro, matemática, pré-escola, ciências, anos 1–6, migração, exportação e mobile')
+    print('PASSOU: 140 missões/atividades, filtro, matemática, pré-escola, ciências, anos 1–6, migração, exportação e mobile')
     browser.close()
 
 if __name__=='__main__':main()

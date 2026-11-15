@@ -22,3 +22,16 @@ jobs:
         run: python -m py_compile test_unificado.py tests/test_novas_missoes.py
       - name: Build Vite
         run: npm run build
+      - name: Instalar navegador para testes
+        run: |
+          python -m pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium --only-shell
+      - name: Testar celular, desktop e sincronização
+        env:
+          MISSAO_EVIDENCIAS: /tmp/missao-evidencias
+        run: |
+          python test_unificado.py
+          python tests/test_novas_missoes.py
+          python tests/test_admin_ui.py
+          python tests/test_sync_ui.py
+          python tests/test_cinco_mundos.py
