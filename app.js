@@ -1110,13 +1110,13 @@ function worldView(world){
  ${world==='science'?'<div class="tip-banner"><span class="tip-icon">🧪</span><div><strong>Olhe, teste e descubra!</strong><p>As experiências são ilustrações para aprender. Converse sobre elas com um adulto.</p></div></div>':''}`;
 }
 function choices(answer,limit){const s=new Set([Number(answer)]);for(let off of shuffle([-3,-2,-1,1,2,3,4,-4,5])){if(s.size===3)break;let n=Number(answer)+off;if(n>=0&&n<=limit)s.add(n)}for(let i=0;s.size<3&&i<=limit;i++)s.add(i);return shuffle([...s].slice(0,3).map(String))}
-function makeQuestion(m){const [icon,singular,plural]=pick(ICONS);let n=0,a=0,b=0,text='',hint='',answer='',parts=[],answers=[];
+function makeQuestion(m){const [icon,singular,plural]=pick(ICONS);const howMany=['peixes','morangos','biscoitos','carrinhos'].includes(plural)?'Quantos':'Quantas';let n=0,a=0,b=0,text='',hint='',answer='',parts=[],answers=[];
  if(m.type==='count'||m.type==='preschool'){
-   n=random(1,m.type==='preschool'?5:10);text=`Quant${['peixes','morangos','biscoitos','carrinhos'].includes(plural)?'os':'as'} ${plural} você vê?`;hint=`Há ${n} ${n===1?singular:plural} ao todo.`;answer=String(n);parts=[{icon,n}];answers=choices(n,m.type==='preschool'?8:13);
+   n=random(1,m.type==='preschool'?5:10);text=`${howMany} ${plural} você vê?`;hint=`Há ${n} ${n===1?singular:plural} ao todo.`;answer=String(n);parts=[{icon,n}];answers=choices(n,m.type==='preschool'?8:13);
  }else if(m.type==='sum'){
-   a=random(1,5);b=random(1,10-a);n=a+b;text='Se juntarmos os dois grupos, quantos desenhos teremos?';hint=`Primeiro conte ${a}. Depois conte mais ${b}. No total são ${n}.`;answer=String(n);parts=[{icon,n:a},{icon,n:b}];answers=choices(n,13);
+   a=random(1,5);b=random(1,10-a);n=a+b;text=`Junte os dois grupos. ${howMany} ${plural} teremos?`;hint=`Primeiro conte ${a}. Depois conte mais ${b}. No total são ${n}.`;answer=String(n);parts=[{icon,n:a},{icon,n:b}];answers=choices(n,13);
  }else if(m.type==='compare'){
-   a=random(1,9);b=random(1,9);if(a===b)b=a===9?10:a+1;text='Qual grupo tem mais desenhos?';answer=a>b?'A':'B';hint=`O grupo A tem ${a} e o B tem ${b}. ${a>b?'A tem mais!':'B tem mais!'}`;parts=[{icon,n:a},{icon,n:b}];answers=['A','B'];
+   a=random(1,9);b=random(1,9);if(a===b)b=a===9?10:a+1;text=`Qual grupo tem mais ${plural}?`;answer=a>b?'A':'B';hint=`O grupo A tem ${a} e o B tem ${b}. ${a>b?'A tem mais!':'B tem mais!'}`;parts=[{icon,n:a},{icon,n:b}];answers=['A','B'];
  }
  return{text,hint,answer,parts,answers,icon,singular};
 }
@@ -1295,6 +1295,7 @@ async function runProgram(round,current){
  const commands=state.commands;
  Object.assign(state,interactive.create(round),{commands,running:true});
  render();
+ document.querySelector('.exp-board')?.scrollIntoView({block:'center',behavior:'instant'});
  for(const frame of result.frames){
   if(!reduced)await new Promise(resolve=>setTimeout(resolve,255));
   if(session!==current||view!=='activity')return;

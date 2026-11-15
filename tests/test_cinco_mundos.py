@@ -52,6 +52,8 @@ with sync_playwright() as playwright:
         page.evaluate('window.scrollTo(0,0)')
         screenshot(page,f'programacao-{width}.png',full_page=True)
         control(page,'run')
+        page.get_by_role('button',name='Executando…').wait_for()
+        assert page.locator('.exp-board').evaluate('(el) => { const r=el.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight - 70; }')
         page.get_by_text('Foguete: linha 3, coluna 3. Estrela coletada.').wait_for()
         page.locator('[data-next]').click()
         page.get_by_role('heading',name='Missão concluída!').wait_for()
