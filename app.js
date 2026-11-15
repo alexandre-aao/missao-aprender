@@ -34,7 +34,7 @@ const MISSIONS=[...BASE_MISSIONS,...SKILLS.map(s=>({
 })),...SCIENCE_DISCOVERIES];
 const WORLDS={
  math:{name:'Matemática',subtitle:'Sua trilha principal do 1º ano',icon:'🔢',css:'math',label:'PRINCIPAL',detail:'Conte, junte e compare. Aprender matemática pode ser uma aventura.'},
- review:{name:'Revisão pré-escola',subtitle:'Revisar também é aprender',icon:'🧸',css:'review',label:'REVISÃO',detail:'Atividades simples para reforçar a base, sem trocar o ano escolar.'},
+ review:{name:'Revisão divertida',subtitle:'Aqueça seus superpoderes',icon:'🧸',css:'review',label:'AQUECIMENTO',detail:'Revisite os primeiros desafios e fortaleça suas habilidades, sem trocar o ano escolar.'},
  science:{name:'Ciências',subtitle:'Laboratório de descobertas',icon:'🔬',css:'science',label:'EXPLORAR',detail:'Experiências interativas para observar e fazer descobertas.'}
 };
 const ICONS=['🍎','⭐','🐠','🍓','🍪','🚗','🦋'];
@@ -80,19 +80,73 @@ function totalStars(){return Object.values(data.missions).reduce((sum,x)=>sum+(N
 function numSolved(){return data.records.length}
 function firstTryPercent(){return numSolved()?Math.round(data.records.filter(x=>x.firstTry).length/numSolved()*100):0}
 function lastProgress(){return currentMissions().find(m=>!missionDone(m))||worldMissions('math')[0]||MISSIONS[0]}
-function worldCard(key){const w=WORLDS[key],done=completed(key),all=worldMissions(key).length;return `<button class="world ${w.css}" data-nav="${key}" aria-label="Abrir ${escapeHtml(w.name)}"><span class="tag">${w.label}</span><span class="world-icon">${w.icon}</span><strong>${w.name}</strong><p>${key==='math'?`Conteúdos do ${data.grade}º ano`:w.subtitle}</p><span class="world-link">${done} de ${all} missões · Explorar →</span></button>`}
-function homeView(){return `<section class="hero"><div class="hero-content"><span class="eyebrow">OLÁ, PEQUENO EXPLORADOR! ✨</span><h1>Todo dia é dia<br>de descobrir algo!</h1><p>Vamos contar, brincar e investigar como o mundo funciona? Você escolhe a aventura.</p><button class="btn btn-light" data-start="${lastProgress().id}">🚀 Começar uma missão</button></div><span class="hero-art" aria-hidden="true">🪐</span></section><div class="section-heading"><div><h2>Escolha sua aventura</h2><p>O 1º ano é o principal. A revisão e as ciências ficam sempre disponíveis.</p></div></div><div class="world-grid">${worldCard('math')}${worldCard('review')}${worldCard('science')}</div><div class="tip-banner"><span class="tip-icon">💡</span><div><strong>Uma descoberta de cada vez</strong><p>Dez minutinhos de curiosidade já fazem diferença. Experimente junto, sem pressa e sem cobrança por notas.</p></div></div>`}
-function missionCard(m){const progress=data.missions[m.id],isDone=missionDone(m),p=m.type==='curriculum'?skillInfo(m.id):null;return `<button type="button" class="mission-card" data-start="${m.id}"><div class="mission-top"><span class="mission-icon">${m.icon}</span><span class="tag">${isDone?'CONCLUÍDA ✓':m.type==='curriculum'?'PRATICAR':'JOGAR'}</span></div><h3>${escapeHtml(m.title)}</h3><p>${escapeHtml(m.desc)}</p><div class="mission-bottom"><span>${progress?`⭐ ${progress.stars} ${progress.stars===1?'estrela':'estrelas'}`:p?.tries?`${p.correct}/${p.tries} acertos iniciais`:m.bncc?`📘 ${escapeHtml(m.bncc)}`:'Começar agora'}</span><span aria-hidden="true">→</span></div></button>`}
+function worldCard(key){
+ const w=WORLDS[key],done=completed(key),all=worldMissions(key).length;
+ return `<button type="button" class="world ${w.css}" data-nav="${key}" aria-label="Abrir ${escapeHtml(w.name)}">
+ <span class="tag">${w.label}</span><span class="world-icon" aria-hidden="true">${w.icon}</span>
+ <strong>${w.name}</strong><p>${key==='math'?`Descubra os números do ${data.grade}º ano`:w.subtitle}</p>
+ <span class="world-link">${done} de ${all} missões · Explorar <span aria-hidden="true">→</span></span></button>`;
+}
+function homeView(){
+ const next=lastProgress(),all=currentMissions(),done=all.filter(missionDone).length,pct=Math.round(done/Math.max(1,all.length)*100);
+ return `<section class="hero hero-kids" aria-label="Boas-vindas">
+ <div class="hero-content"><span class="eyebrow">OI, EXPLORADOR! ✨</span>
+ <h1>Uma aventura<br>espera por você!</h1>
+ <p>Pronto para brincar, pensar e descobrir algo novo?</p>
+ <button type="button" class="btn btn-light hero-cta" data-start="${next.id}">🚀 ${missionDone(next)?'Jogar novamente':'Continuar aventura'}</button>
+ <span class="next-hint">Próxima: ${escapeHtml(next.title)}</span></div>
+ <span class="hero-mascot" aria-hidden="true">🧑‍🚀</span><span class="hero-planet" aria-hidden="true">🪐</span></section>
+ <section class="home-progress" aria-label="Seu progresso"><span class="home-progress-icon" aria-hidden="true">🌟</span>
+ <div class="home-progress-copy"><strong>Olha só quanto você já explorou!</strong>
+ <div class="meter" role="progressbar" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${all.length}" aria-label="Missões concluídas"><span style="width:${pct}%"></span></div>
+ <small>${done} de ${all.length} missões concluídas · No seu ritmo</small></div></section>
+ <div class="section-heading" id="mundos"><div><h2>Escolha seu mundo</h2><p>Qual aventura combina com você hoje?</p></div></div>
+ <div class="world-grid">${worldCard('math')}${worldCard('review')}${worldCard('science')}</div>
+ <div class="tip-banner"><span class="tip-icon" aria-hidden="true">💡</span><div><strong>Uma descoberta de cada vez</strong>
+ <p>Você pode tentar de novo quantas vezes quiser. O importante é aprender se divertindo!</p></div></div>`;
+}
+function adventuresView(){
+ return `<div class="page-intro"><div><span class="eyebrow">SEU MAPA DE DESCOBERTAS</span>
+ <h1>Para onde vamos? 🗺️</h1><p>Escolha um mundo para começar. Todas as aventuras podem ser revisitadas!</p></div>
+ <span class="page-art" aria-hidden="true">🌈</span></div>
+ <div class="world-grid adventures-grid">${worldCard('math')}${worldCard('review')}${worldCard('science')}</div>
+ <div class="tip-banner"><span class="tip-icon" aria-hidden="true">🚀</span><div><strong>Seu ritmo, sua aventura</strong>
+ <p>Escolha uma missão, ou volte àquela que você mais gostou.</p></div></div>`;
+}
+function missionCard(m){
+ const progress=data.missions[m.id],isDone=missionDone(m),p=m.type==='curriculum'?skillInfo(m.id):null;
+ return `<button type="button" class="mission-card ${isDone?'mission-done':''}" data-start="${m.id}">
+ <div class="mission-top"><span class="mission-icon" aria-hidden="true">${m.icon}</span>
+ <span class="tag">${isDone?'FEITA ✓':m.type==='curriculum'?'TREINAR':'DESCOBRIR'}</span></div>
+ <h3>${escapeHtml(m.title)}</h3><p>${escapeHtml(m.desc)}</p>
+ <div class="mission-bottom"><span>${progress?`⭐ ${progress.stars} ${progress.stars===1?'estrela':'estrelas'}`:p?.tries?'Continue praticando':'Pronto para começar?'}</span>
+ <span class="mission-arrow" aria-hidden="true">→</span></div></button>`;
+}
 function worldView(world){
  const w=WORLDS[world],all=worldMissions(world),done=completed(world);
- const filters=world==='science'?[]:[['all','Todas'],...Object.entries(UNITS).map(([k,v])=>[k,`${v.emoji} ${v.label}`])];
- const ms=all.filter(m=>unitFilter==='all'||m.unit===unitFilter||m.type!=='curriculum'&&unitFilter==='all');
- const gradeLabel=world==='math'?`${data.grade}º ANO DO ENSINO FUNDAMENTAL`:world==='review'?'REVISAR AS BASES':'EXPERIMENTAR';
- return `<div class="page-intro"><div><div class="eyebrow">${w.label} · ${gradeLabel}</div><h1>${w.name}</h1><p>${world==='math'?`Exercícios e desafios organizados para o ${data.grade}º ano. A pré-escola continua disponível para revisão.`:w.detail}</p></div><span class="page-art" aria-hidden="true">${w.icon}</span></div>
- <div class="progress-summary"><strong>${done} de ${all.length} missões</strong><div class="meter" aria-label="${Math.round(done/Math.max(1,all.length)*100)}% concluído"><span style="width:${done/Math.max(1,all.length)*100}%"></span></div><small>Avance no seu ritmo 🌱</small></div>
- ${filters.length?`<div class="unit-filters" aria-label="Filtrar assuntos">${filters.map(([key,name])=>`<button type="button" class="unit-filter ${key===unitFilter?'active':''}" data-unit="${key}">${name}</button>`).join('')}</div>`:''}
- <div class="mission-grid">${ms.map(missionCard).join('')}</div>
- ${world==='science'?'<div class="tip-banner"><span class="tip-icon">🧪</span><div><strong>Hora de observar</strong><p>São modelos ilustrativos e não experimentos em escala real. Convide um adulto para conversar sobre as descobertas.</p></div></div>':`<p class="curriculum-note">📘 Atividades de matemática agrupadas por assuntos curriculares. A revisão não altera o ano principal, e os registros ficam neste dispositivo.</p>`}`
+ const filters=world==='science'?[]:[['all','Todos os assuntos'],...Object.entries(UNITS).map(([k,v])=>[k,`${v.emoji} ${v.label}`])];
+ const ms=all.filter(m=>unitFilter==='all'||m.unit===unitFilter);
+ const upcoming=all.find(m=>!missionDone(m))||all[0];
+ const groups=new Map();
+ for(const m of ms){const key=m.unit&&UNITS[m.unit]?m.unit:'jogos';
+ if(!groups.has(key))groups.set(key,{label:key==='jogos'?'🎮 Missões especiais':`${UNITS[key].emoji} ${UNITS[key].label}`,items:[]});
+ groups.get(key).items.push(m);}
+ const sections=[...groups.values()].map((g,i)=>`<details class="mission-section" ${unitFilter!=='all'||i===0?'open':''}>
+ <summary><span>${g.label}</span><span class="section-counter">${g.items.length} ${g.items.length===1?'missão':'missões'} <span aria-hidden="true">⌄</span></span></summary>
+ <div class="mission-grid">${g.items.map(missionCard).join('')}</div></details>`).join('');
+ return `<div class="page-intro"><div><span class="eyebrow">${w.label} · ${world==='math'?data.grade+'º ANO':world==='review'?'AQUECIMENTO':'EXPERIÊNCIAS'}</span>
+ <h1>${w.name}</h1><p>${world==='math'?'Escolha um assunto e descubra o que você já sabe!':w.detail}</p></div>
+ <span class="page-art" aria-hidden="true">${w.icon}</span></div>
+ <div class="progress-summary"><strong>${done} de ${all.length} missões</strong>
+ <div class="meter" role="progressbar" aria-label="Missões concluídas nesta trilha" aria-valuemin="0" aria-valuemax="${all.length}" aria-valuenow="${done}"><span style="width:${done/Math.max(1,all.length)*100}%"></span></div>
+ <small>Você consegue! 🌱</small></div>
+ ${upcoming?`<div class="featured-mission"><div class="featured-symbol" aria-hidden="true">${upcoming.icon}</div><div class="featured-copy">
+ <span class="eyebrow">${missionDone(upcoming)?'SUA MISSÃO FAVORITA':'SUA PRÓXIMA MISSÃO'}</span><strong>${escapeHtml(upcoming.title)}</strong>
+ <p>Um novo passo da sua aventura.</p></div><button type="button" class="btn btn-primary" data-start="${upcoming.id}">${missionDone(upcoming)?'Jogar de novo':'Jogar agora'} →</button></div>`:''}
+ ${filters.length?`<div class="filter-heading"><h2>Escolha um assunto</h2><p>Toque em um tema ou abra uma trilha abaixo.</p></div>
+ <div class="unit-filters" role="group" aria-label="Escolher assunto">${filters.map(([key,name])=>`<button type="button" class="unit-filter ${key===unitFilter?'active':''}" aria-pressed="${key===unitFilter}" data-unit="${key}">${name}</button>`).join('')}</div>`:''}
+ <div class="mission-sections">${sections||'<p class="empty">Ainda não há missões neste assunto.</p>'}</div>
+ ${world==='science'?'<div class="tip-banner"><span class="tip-icon">🧪</span><div><strong>Olhe, teste e descubra!</strong><p>As experiências são ilustrações para aprender. Converse sobre elas com um adulto.</p></div></div>':''}`;
 }
 function choices(answer,limit){const s=new Set([Number(answer)]);for(let off of shuffle([-3,-2,-1,1,2,3,4,-4,5])){if(s.size===3)break;let n=Number(answer)+off;if(n>=0&&n<=limit)s.add(n)}for(let i=0;s.size<3&&i<=limit;i++)s.add(i);return shuffle([...s].slice(0,3).map(String))}
 function makeQuestion(m){const icon=pick(ICONS);let n=0,a=0,b=0,text='',hint='',answer='',parts=[],answers=[];
@@ -130,9 +184,17 @@ function discoveryBoard(){
  <div class="discovery-actions" aria-label="Escolher situação para observar">${actions.map((x,i)=>`<button class="discovery-action ${session.explored.has(i)?'seen':''}" type="button" data-explore="${i}" aria-pressed="${scene===i}">${escapeHtml(x[0])} ${escapeHtml(x[1])}${session.explored.has(i)?' ✓':''}</button>`).join('')}</div>
  ${session.explored.size<2?`<p class="activity-footnote"><strong>Etapa ${session.explored.size+1} de 2:</strong> toque em <strong>${escapeHtml(actions.find((_,i)=>!session.explored.has(i))?.[1]||"outra experiência")}</strong> para liberar a pergunta. Depois de responder, você poderá concluir e seguir para a próxima missão.</p>`:`<div class="experiment-answer"><h3>${escapeHtml(m.ask)}</h3><div class="choice-grid" role="group" aria-label="Escolha sua resposta">${m.choices.map(([id,label])=>`<button type="button" class="choice ${session.resolved&&id===m.right?'correct':''} ${session.wrongOptions.has(id)?'wrong':''}" data-science-answer="${id}" ${session.resolved||session.wrongOptions.has(id)?'disabled':''}>${escapeHtml(label)}</button>`).join('')}</div>${feedbackHtml()}</div>`}`;
 }
-function activityView(){if(!session)return'';const m=session.mission;const steps=m.questions;const progress=100*(session.step/steps);return `<div class="activity-shell"><button type="button" class="breadcrumbs" data-nav="${m.world}">← Voltar às missões</button><div class="activity-meta"><span>${m.icon} ${escapeHtml(m.title)}</span><small>${m.world==='science'?'Descoberta científica':`Desafio ${session.step+1} de ${steps}`}</small></div><div class="activity-bar"><span style="width:${progress}%"></span></div><section class="activity-card">${m.world==='science'?(m.type==='gravity'?gravityBoard():m.type==='daynight'?dayNightBoard():discoveryBoard()):m.type==='curriculum'?curriculumActivity():mathActivity()}</section><p class="activity-footnote">Errar faz parte da descoberta. Tente de novo com calma! 💜</p></div>`}
+function activityView(){
+ if(!session)return'';
+ const m=session.mission,steps=m.questions,progress=100*(session.step/steps);
+ return `<div class="activity-shell"><button type="button" class="breadcrumbs" data-nav="${m.world}">← Voltar às aventuras</button>
+ <div class="activity-meta"><span>${m.icon} ${escapeHtml(m.title)}</span><small>${m.world==='science'?'Hora de descobrir!':`Passo ${session.step+1} de ${steps}`}</small></div>
+ <div class="activity-bar" role="progressbar" aria-label="Progresso da missão" aria-valuemin="0" aria-valuemax="${steps}" aria-valuenow="${session.step}"><span style="width:${progress}%"></span></div>
+ <section class="activity-card">${m.world==='science'?(m.type==='gravity'?gravityBoard():m.type==='daynight'?dayNightBoard():discoveryBoard()):m.type==='curriculum'?curriculumActivity():mathActivity()}</section>
+ <p class="activity-footnote">💜 Você pode tentar de novo. Aprender é uma aventura!</p></div>`;
+}
 function nextMissionFrom(m){const options=worldMissions(m.world);const index=options.findIndex(item=>item.id===m.id);return index>=0?options[index+1]||null:null}
-function resultView(){const m=session.mission,stars=session.stars,upNext=nextMissionFrom(m);return `<div class="activity-shell"><button type="button" class="breadcrumbs" data-nav="${m.world}">← Ver outras missões</button><section class="result-card"><div class="result-emoji">🏆</div><h1>Missão concluída!</h1><p>Você explorou <strong>${escapeHtml(m.title)}</strong> e ganhou ${stars} ${stars===1?'estrela':'estrelas'}.</p><div class="result-stars" aria-label="${stars} estrelas conquistadas">${'⭐'.repeat(stars)}</div><div class="result-buttons">${upNext?`<button type="button" class="btn btn-primary" data-start="${upNext.id}">➡️ Próxima missão: ${escapeHtml(upNext.title)}</button>`:""}<button type="button" class="btn btn-ghost" data-start="${m.id}">🔄 Jogar novamente</button><button type="button" class="btn btn-ghost" data-nav="${m.world}">Outras missões →</button></div></section></div>`}
+function resultView(){const m=session.mission,stars=session.stars,upNext=nextMissionFrom(m);return `<div class="activity-shell"><button type="button" class="breadcrumbs" data-nav="${m.world}">← Ver outras aventuras</button><section class="result-card"><div class="result-emoji" aria-hidden="true">🧑‍🚀</div><div class="result-confetti" aria-hidden="true">✨ 🌟 ✨</div><h1>Missão concluída!</h1><p>Você descobriu algo novo em <strong>${escapeHtml(m.title)}</strong>!</p><div class="result-stars" aria-label="${stars} estrelas conquistadas">${'⭐'.repeat(stars)}</div><p>Continue explorando no seu ritmo.</p><div class="result-buttons">${upNext?`<button type="button" class="btn btn-primary" data-start="${upNext.id}">🚀 Próxima missão: ${escapeHtml(upNext.title)}</button>`:""}<button type="button" class="btn btn-ghost" data-start="${m.id}">🔄 Jogar novamente</button><button type="button" class="btn btn-ghost" data-nav="${m.world}">Outras missões →</button></div></section></div>`;}
 function badges(){const done=MISSIONS.filter(m=>missionDone(m)),completions=done.length;return [
  {icon:'🌟',title:'Primeira estrela',desc:'Concluir sua primeira missão',ok:completions>0},
  {icon:'🔢',title:'Amigo dos números',desc:'Concluir uma missão de matemática',ok:MISSIONS.filter(m=>m.world==='math').some(m=>missionDone(m))},
@@ -141,22 +203,32 @@ function badges(){const done=MISSIONS.filter(m=>missionDone(m)),completions=done
  {icon:'🚀',title:'Explorador dedicado',desc:'Concluir dez missões diferentes',ok:completions>=10},
  {icon:'💫',title:'Colecionador',desc:'Conquistar pelo menos 12 estrelas',ok:totalStars()>=12}
 ]}
-function awardsView(){return `<div class="page-intro"><div><div class="eyebrow">MINHAS CONQUISTAS</div><h1>Seu álbum de descobertas 🏆</h1><p>Cada conquista mostra uma aventura que você já experimentou.</p></div><span class="page-art">🏅</span></div><div class="awards-grid">${badges().map(b=>`<div class="award-card ${b.ok?'':'locked'}"><div class="award-emoji">${b.icon}</div><h3>${b.title}</h3><p>${b.desc}</p><span class="tag">${b.ok?'CONQUISTADA ✓':'AINDA NÃO'}</span></div>`).join('')}</div>`}
+function awardsView(){
+ const items=badges(),count=items.filter(b=>b.ok).length;
+ return `<div class="page-intro"><div><span class="eyebrow">MINHAS CONQUISTAS</span>
+ <h1>Meu álbum de estrelas 🏆</h1><p>Cada descoberta merece uma comemoração!</p></div>
+ <span class="page-art" aria-hidden="true">🏅</span></div>
+ <div class="awards-summary"><span aria-hidden="true">🌟</span><div><strong>${count} de ${items.length} medalhas</strong>
+ <p>Continue explorando para encontrar novas conquistas.</p></div></div>
+ <div class="awards-grid">${items.map(b=>`<div class="award-card ${b.ok?'unlocked':'locked'}">
+ <div class="award-emoji" aria-hidden="true">${b.icon}</div><h3>${b.title}</h3><p>${b.desc}</p>
+ <span class="tag">${b.ok?'CONQUISTADA ✓':'AINDA NÃO'}</span></div>`).join('')}</div>`;
+}
 function parentView(){
  const available=currentMissions(),complete=available.filter(m=>missionDone(m));
  const recordsBy=id=>data.records.filter(x=>x.id===id);
  const trouble=available.map(m=>({...m,errors:recordsBy(m.id).reduce((s,r)=>s+(r.errors||0),0)})).filter(m=>m.errors>=2).sort((a,b)=>b.errors-a.errors).slice(0,8);
  const unitReports=Object.entries(UNITS).map(([id,u])=>({label:`${u.emoji} ${u.label}`,entries:data.records.filter(r=>SKILLS.find(s=>s.id===r.id)?.unit===id)}));
- return `<div class="page-intro"><div><div class="eyebrow">ESPAÇO DO RESPONSÁVEL</div><h1>Acompanhamento da família 📊</h1><p>Indicadores de atividades feitas neste navegador, não equivalem a notas ou diagnósticos escolares.</p></div><span class="page-art">👨‍👩‍👧</span></div>
+ return `<div class="page-intro"><div><div class="eyebrow">ESPAÇO DO RESPONSÁVEL</div><h1>Acompanhamento da família 📊</h1><p>Indicadores de aprendizagem do perfil ativo. Não representam notas ou diagnósticos escolares.</p></div><span class="page-art">👨‍👩‍👧</span></div>
  <div class="stat-row"><div class="stat-box"><span>🏅</span><strong>${complete.length}/${available.length}</strong><small>Missões concluídas nas trilhas visíveis</small></div><div class="stat-box"><span>✏️</span><strong>${numSolved()}</strong><small>Desafios registrados</small></div><div class="stat-box"><span>🎯</span><strong>${firstTryPercent()}%</strong><small>Acertos na primeira tentativa</small></div></div>
  <section class="parent-section"><h3>Progresso por trilha</h3>${Object.keys(WORLDS).map(key=>{const n=completed(key),max=worldMissions(key).length;return `<div class="parent-track"><strong>${WORLDS[key].name}</strong><div class="meter"><span style="width:${Math.round(100*n/Math.max(1,max))}%"></span></div><small>${n} de ${max}</small></div>`}).join('')}</section>
  <section class="parent-section"><h3>Resultados por assunto matemático</h3>${unitReports.map(u=>{const n=u.entries.length,p=n?Math.round(100*u.entries.filter(x=>x.firstTry).length/n):0;return `<div class="parent-track"><strong>${u.label}</strong><div class="meter"><span style="width:${p}%"></span></div><small>${n?n+' respostas · '+p+'% na primeira tentativa':'Ainda sem registros'}</small></div>`}).join('')}</section>
  <section class="parent-section"><h3>Onde praticar novamente?</h3>${trouble.length?`<ul class="error-list">${trouble.map(m=>`<li><strong>${m.icon} ${escapeHtml(m.title)}</strong> · ${m.errors} ${m.errors===1?'tentativa':'tentativas'} com dificuldade. Uma boa opção para revisar juntos.</li>`).join('')}</ul>`:'<p class="empty">Depois de algumas atividades, esta área poderá sugerir novas revisões.</p>'}</section>
- <section class="parent-section"><h3>Configurações e privacidade</h3><p class="muted">O 1º ano é a etapa inicial; os anos seguintes estão disponíveis para uso futuro. Revisões da pré-escola não alteram o ano escolhido. Seus dados não são enviados a servidores.</p><label class="grade-setting">Ano escolar principal <select id="settings-grade">${YEARS.filter(y=>y.id!=='P').map(y=>`<option value="${y.id}" ${y.id===data.grade?'selected':''}>${escapeHtml(y.name)}</option>`).join('')}</select></label>
+ <section class="parent-section"><h3>Conta e segurança</h3><p class="muted">O responsável pode gerenciar apelidos, avatares e perfis infantis em uma área privada.</p><a class="btn btn-outline" href="./conta.html">👪 Gerenciar conta e perfis →</a></section><section class="parent-section"><h3>Configurações e privacidade</h3><p class="muted">O 1º ano é a etapa inicial; os anos seguintes estão disponíveis para uso futuro. Revisões da pré-escola não alteram o ano escolhido. O progresso fica no dispositivo e pode ser sincronizado com segurança quando um responsável ativa um perfil.</p><label class="grade-setting">Ano escolar principal <select id="settings-grade">${YEARS.filter(y=>y.id!=='P').map(y=>`<option value="${y.id}" ${y.id===data.grade?'selected':''}>${escapeHtml(y.name)}</option>`).join('')}</select></label>
  <div class="settings-box"><button type="button" class="btn btn-ghost" data-export="1">⬇ Exportar progresso (.json)</button><button type="button" class="btn btn-outline" data-reset="1">Apagar progresso desta versão</button></div><p class="privacy-note">Os protótipos anteriores não são apagados. Importação automática depende de os arquivos compartilharem o mesmo armazenamento do navegador. Faça cópia do progresso antes de limpar dados.</p></section><button type="button" class="btn btn-outline" data-nav="home">← Voltar ao início</button>`
 }
-function navTitle(){return({home:'Início',math:'Matemática',review:'Revisão da pré-escola',science:'Ciências',awards:'Conquistas',activity:'Hora da missão',result:'Muito bem!',parents:'Para a família'})[view]}
-function render(){if(view==='parents'&&!parentAllowed)view='home';const main=$('main');if(!main)return;main.innerHTML=({home:homeView,math:()=>worldView('math'),review:()=>worldView('review'),science:()=>worldView('science'),awards:awardsView,activity:activityView,result:resultView,parents:parentView})[view]();$('section-name').textContent=navTitle();const gradePill=$('grade-pill');if(gradePill)gradePill.textContent=`🎒 ${data.grade}º ano`;$('star-indicator').textContent=`⭐ ${totalStars()}`;document.querySelectorAll('.nav-button').forEach(b=>b.classList.toggle('active',b.dataset.nav===view||(view==='activity'&&session&&session.mission.world===b.dataset.nav)));}
+function navTitle(){return({home:'Início',adventures:'Aventuras',math:'Matemática',review:'Revisão da pré-escola',science:'Ciências',awards:'Conquistas',activity:'Hora da missão',result:'Muito bem!',parents:'Para a família'})[view]}
+function render(){if(view==='parents'&&!parentAllowed)view='home';const main=$('main');if(!main)return;main.innerHTML=({home:homeView,adventures:adventuresView,math:()=>worldView('math'),review:()=>worldView('review'),science:()=>worldView('science'),awards:awardsView,activity:activityView,result:resultView,parents:parentView})[view]();$('section-name').textContent=navTitle();const gradePill=$('grade-pill');if(gradePill)gradePill.textContent=`🎒 ${data.grade}º ano`;$('star-indicator').textContent=`⭐ ${totalStars()}`;document.querySelectorAll('.side-nav .nav-button').forEach(b=>{const selected=['math','review','science','activity','result'].includes(view)?'adventures':view;b.classList.toggle('active',b.dataset.nav===selected);if(b.dataset.nav===selected)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});}
 function navigate(to){clearTimeout(gravityTimeout);session=null;unitFilter='all';view=to;render();window.scrollTo({top:0,behavior:'instant'})}
 function start(id){const m=getMission(id);if(!m)return;clearTimeout(gravityTimeout);view='activity';session={mission:m,step:0,question:null,firstTry:0,errors:0,wrongCount:0,wrongOptions:new Set(),feedback:null,resolved:false,marked:new Set(),height:2,released:false,dropping:false,drops:0,angle:0,rotated:false,explored:new Set(),exploredScene:null};if(m.world!=='science')session.question=generateQuestion(m);render();window.scrollTo({top:0,behavior:'instant'});}
 function logRecord(){

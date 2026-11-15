@@ -8,6 +8,7 @@
   <title>Missão Aprender | Matemática e Ciências · 86 missões</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🚀%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./infantil.css">
   <script type="module" src="./curriculo.js"></script>
   <script type="module" src="./app.js"></script>
   <script type="module" src="./sync-ui.js"></script>
@@ -17,13 +18,11 @@
     <aside class="sidebar">
       <div class="brand"><div class="brand-mark" aria-hidden="true">🚀</div><div><strong>missão<span>aprender</span></strong><small>Pequenas descobertas, grandes ideias</small></div></div>
       <nav aria-label="Navegação principal" class="side-nav">
-        <button type="button" data-nav="home" class="nav-button active"><span aria-hidden="true">🏠</span> Início</button>
-        <button type="button" data-nav="math" class="nav-button"><span aria-hidden="true">🔢</span> Matemática</button>
-        <button type="button" data-nav="review" class="nav-button"><span aria-hidden="true">🧸</span> Revisão pré-escola</button>
-        <button type="button" data-nav="science" class="nav-button"><span aria-hidden="true">🔬</span> Ciências</button>
-        <button type="button" data-nav="awards" class="nav-button"><span aria-hidden="true">🏆</span> Conquistas</button>
-        <a href="./conta.html" class="nav-button family-account">👪 Conta e perfis</a>
+        <button type="button" data-nav="home" class="nav-button active"><span aria-hidden="true">🏠</span><span class="nav-label">Início</span></button>
+        <button type="button" data-nav="adventures" class="nav-button"><span aria-hidden="true">🗺️</span><span class="nav-label">Aventuras</span></button>
+        <button type="button" data-nav="awards" class="nav-button"><span aria-hidden="true">🏆</span><span class="nav-label">Conquistas</span></button>
       </nav>
+      <a href="./conta.html" class="parent-link parent-account">👪 Conta e perfis <span aria-hidden="true">↗</span></a>
       <div class="side-note"><span class="note-orbit">🪐</span><strong>Aprenda no seu ritmo!</strong><p>Errar, tentar de novo e fazer perguntas também é aprender.</p></div>
       <button type="button" id="parents-sidebar" class="parent-link">👨‍👩‍👧 Para a família <span aria-hidden="true">↗</span></button>
     </aside>
