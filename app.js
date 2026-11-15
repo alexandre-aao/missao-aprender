@@ -17,6 +17,485 @@ const BASE_MISSIONS=[
  {id:'c-dia-noite',world:'science',title:'Como nasce a noite?',desc:'Gire a Terra e observe onde está iluminado.',icon:'🌎',type:'daynight',questions:1}
 ];
 // Laboratórios de observação ilustrados, com duas experiências antes da pergunta.
+// Guia de investigação das oito missões clássicas: mantém seus IDs e pontuações.
+const SCIENCE_CLASSIC_GUIDES={
+  "c-plantas": {
+    "predictionPrompt": "O que ajuda uma planta a continuar crescendo?",
+    "predictions": [
+      "Água e luz adequada",
+      "Ficar muitos dias sem água"
+    ],
+    "comparePrompt": "O que muda quando falta água ou luz durante muito tempo?",
+    "ask": "O que uma planta geralmente precisa para crescer bem?",
+    "choices": [
+      [
+        "agua",
+        "Água, luz adequada e nutrientes"
+      ],
+      [
+        "brinquedos",
+        "Apenas água, sempre no escuro"
+      ],
+      [
+        "escuro",
+        "Apenas luz, nunca água"
+      ]
+    ],
+    "explain": "Plantas geralmente precisam de água, luz adequada, ar e nutrientes. Os efeitos demoram dias ou semanas. Cada espécie tolera condições diferentes.",
+    "actions": [
+      [
+        "💧",
+        "Dar água e luz adequadas",
+        "☀️ 💧 🌿",
+        "Com água, luz e boas condições, uma planta pode continuar crescendo ao longo dos dias."
+      ],
+      [
+        "🏜️",
+        "Passar vários dias sem água",
+        "☀️ 🌱 🥀",
+        "Sem água por tempo suficiente, muitas plantas murcham."
+      ],
+      [
+        "🌑",
+        "Passar muito tempo sem luz",
+        "🌑 🪴",
+        "Sem luz suficiente durante muito tempo, muitas plantas enfraquecem."
+      ]
+    ],
+    "visuals": [
+      [
+        "☀️",
+        "💧",
+        "🌿"
+      ],
+      [
+        "☀️",
+        "🚫💧",
+        "🥀"
+      ],
+      [
+        "🌑",
+        "🪴",
+        "🍃"
+      ]
+    ]
+  },
+  "c-flutua": {
+    "predictionPrompt": "Na água, um bloco comum de madeira e uma pedra vão…",
+    "predictions": [
+      "Madeira flutua; pedra afunda",
+      "Os dois afundam"
+    ],
+    "comparePrompt": "A água é a mesma: o que ficou na superfície e o que foi para o fundo?",
+    "ask": "O que vimos acontecer com o bloco de madeira e a pedra?",
+    "choices": [
+      [
+        "madeira",
+        "Madeira flutuou e pedra afundou"
+      ],
+      [
+        "pedra",
+        "Pedra flutuou e madeira afundou"
+      ],
+      [
+        "metal",
+        "Os dois sempre ficaram na superfície"
+      ]
+    ],
+    "explain": "Muitos blocos de madeira flutuam e pedras comuns afundam. O material, a densidade média e o formato influenciam. Não depende só do peso do objeto.",
+    "actions": [
+      [
+        "🪵",
+        "Testar bloco de madeira comum",
+        "🪵〰️🌊",
+        "Neste modelo, o bloco de madeira fica na superfície."
+      ],
+      [
+        "🪨",
+        "Testar pedra comum",
+        "🌊⬇️🪨",
+        "Neste modelo, a pedra desce para o fundo."
+      ],
+      [
+        "⛵",
+        "Ver um barco com ar dentro",
+        "⛵🌊",
+        "Um barco pode flutuar graças ao formato e à água deslocada, mesmo sendo feito de metal."
+      ]
+    ],
+    "visuals": [
+      [
+        "🪵",
+        "〰️",
+        "💧"
+      ],
+      [
+        "💧",
+        "⬇️",
+        "🪨"
+      ],
+      [
+        "⛵",
+        "〰️",
+        "🌊"
+      ]
+    ]
+  },
+  "c-ima": {
+    "predictionPrompt": "Qual objeto vai ser atraído por um ímã escolar?",
+    "predictions": [
+      "Um clipe de aço com ferro",
+      "Uma tampinha de plástico"
+    ],
+    "comparePrompt": "O ímã atraiu todos os materiais ou apenas alguns?",
+    "ask": "Qual objeto costuma ser atraído por um ímã comum?",
+    "choices": [
+      [
+        "clipe",
+        "Um clipe de aço contendo ferro"
+      ],
+      [
+        "papel",
+        "Uma folha de papel"
+      ],
+      [
+        "plastico",
+        "Uma tampinha plástica"
+      ]
+    ],
+    "explain": "Muitos clipes de aço contêm ferro e são atraídos pelo ímã. Papel, plástico e alumínio comum não são fortemente atraídos; nem todo metal é magnético.",
+    "actions": [
+      [
+        "📎",
+        "Aproximar o clipe de aço",
+        "🧲 ✨ 📎",
+        "Um clipe comum de aço com ferro pode ser atraído pelo ímã."
+      ],
+      [
+        "📄",
+        "Aproximar uma folha de papel",
+        "🧲  📄",
+        "O papel não é atraído pelo ímã comum."
+      ],
+      [
+        "🧩",
+        "Aproximar plástico",
+        "🧲  🧩",
+        "O plástico não é atraído pelo ímã comum."
+      ],
+      [
+        "🥫",
+        "Aproximar alumínio comum",
+        "🧲  🥫",
+        "O alumínio não é fortemente atraído por um ímã escolar comum."
+      ]
+    ],
+    "visuals": [
+      [
+        "🧲",
+        "✨",
+        "📎"
+      ],
+      [
+        "🧲",
+        "↛",
+        "📄"
+      ],
+      [
+        "🧲",
+        "↛",
+        "🧩"
+      ],
+      [
+        "🧲",
+        "↛",
+        "🥫"
+      ]
+    ]
+  },
+  "c-sombras": {
+    "predictionPrompt": "Se a luz vier da esquerda, a sombra do brinquedo aparece…",
+    "predictions": [
+      "À direita",
+      "À esquerda"
+    ],
+    "comparePrompt": "O que mudou de lado quando a lanterna mudou de posição?",
+    "ask": "Onde a sombra costuma aparecer em relação à luz?",
+    "choices": [
+      [
+        "oposto",
+        "No lado oposto à fonte de luz"
+      ],
+      [
+        "mesmo",
+        "Sempre do mesmo lado da luz"
+      ],
+      [
+        "dentro",
+        "Sempre embaixo, em qualquer posição"
+      ]
+    ],
+    "explain": "Objetos opacos bloqueiam a passagem da luz e podem formar sombra no lado oposto à fonte. A posição da parede também influencia a sombra projetada.",
+    "visuals": [
+      [
+        "🔦",
+        "→",
+        "🧸",
+        "⬛"
+      ],
+      [
+        "⬛",
+        "🧸",
+        "←",
+        "🔦"
+      ]
+    ]
+  },
+  "c-som": {
+    "predictionPrompt": "Ao tocar um tambor, o que acontece com a pele dele?",
+    "predictions": [
+      "Ela vibra",
+      "Ela continua totalmente parada"
+    ],
+    "comparePrompt": "O que mudou entre o tambor tocado e o tambor parado?",
+    "ask": "O que produz o som do tambor quando o tocamos?",
+    "choices": [
+      [
+        "vibracao",
+        "A vibração da membrana"
+      ],
+      [
+        "cor",
+        "A cor pintada no tambor"
+      ],
+      [
+        "silencio",
+        "O ar parado sem vibração"
+      ]
+    ],
+    "explain": "Ao tocar, a membrana do tambor vibra e faz o ar vibrar, formando ondas sonoras. Tocar de formas diferentes muda o som. O desenho representa vibrações, mas não reproduz som real.",
+    "actions": [
+      [
+        "🥁",
+        "Tocar o tambor",
+        "🥁 〰️〰️",
+        "A membrana vibra e produz som."
+      ],
+      [
+        "✋",
+        "Deixar o tambor parar",
+        "🥁 ⏸️",
+        "Quando o tambor para de vibrar, ele deixa de produzir esse som."
+      ],
+      [
+        "👆",
+        "Tocar bem de leve",
+        "👆 🥁 〰️",
+        "Um toque leve costuma fazer uma vibração menor e um som mais suave."
+      ]
+    ],
+    "visuals": [
+      [
+        "🥁",
+        "〰️",
+        "👂"
+      ],
+      [
+        "✋",
+        "🥁",
+        "🔇"
+      ],
+      [
+        "👆",
+        "🥁",
+        "〰️"
+      ]
+    ]
+  },
+  "c-agua": {
+    "predictionPrompt": "Se um cubo de gelo receber calor suficiente, ele vai…",
+    "predictions": [
+      "Derreter e virar água líquida",
+      "Continuar sólido para sempre"
+    ],
+    "comparePrompt": "O que mudou quando o gelo recebeu calor ou ficou mais frio?",
+    "ask": "O que acontece com o gelo quando recebe calor suficiente?",
+    "choices": [
+      [
+        "derrete",
+        "Derrete e vira água líquida"
+      ],
+      [
+        "vira-pedra",
+        "Continua congelado mesmo com calor suficiente"
+      ],
+      [
+        "cresce",
+        "Forma cada vez mais gelo ao aquecer"
+      ]
+    ],
+    "explain": "Gelo é água sólida. Ao receber energia suficiente, pode derreter e virar água líquida; se resfriar o bastante, a água pode congelar novamente. Experimente apenas no desenho.",
+    "actions": [
+      [
+        "❄️",
+        "Manter bem frio no desenho",
+        "❄️ 🧊",
+        "Em temperatura suficientemente baixa, a água continua sólida."
+      ],
+      [
+        "☀️",
+        "Adicionar calor no desenho",
+        "🧊 → 💧",
+        "Com calor suficiente, o gelo derrete e vira água líquida."
+      ],
+      [
+        "🧊",
+        "Resfriar a água no desenho",
+        "💧 → 🧊",
+        "Se esfriar o bastante, a água pode congelar novamente."
+      ]
+    ],
+    "visuals": [
+      [
+        "❄️",
+        "🧊",
+        "❄️"
+      ],
+      [
+        "☀️",
+        "🧊",
+        "💧"
+      ],
+      [
+        "❄️",
+        "💧",
+        "🧊"
+      ]
+    ]
+  },
+  "c-sol": {
+    "predictionPrompt": "Quem emite luz própria: o Sol ou a Terra?",
+    "predictions": [
+      "O Sol",
+      "A Terra"
+    ],
+    "comparePrompt": "Quem emite luz, e quem recebe e reflete a luz solar?",
+    "ask": "Qual objeto apresentado produz sua própria luz?",
+    "choices": [
+      [
+        "estrela",
+        "O Sol, que é uma estrela"
+      ],
+      [
+        "planeta",
+        "A Terra, porque é planeta"
+      ],
+      [
+        "lua",
+        "A Lua, por refletir luz"
+      ]
+    ],
+    "explain": "O Sol é uma estrela que emite luz. A Terra e a Lua recebem luz solar e refletem parte dela. Nunca olhe diretamente para o Sol: use apenas este desenho.",
+    "actions": [
+      [
+        "☀️",
+        "Observar o Sol no desenho",
+        "☀️ ✨",
+        "O Sol é uma estrela que emite sua própria luz."
+      ],
+      [
+        "🌍",
+        "Observar a Terra",
+        "☀️ → 🌍",
+        "A Terra é um planeta, iluminado pelo Sol."
+      ],
+      [
+        "🌙",
+        "Observar a Lua",
+        "☀️ → 🌙",
+        "A Lua reflete parte da luz solar que chega até ela."
+      ]
+    ],
+    "visuals": [
+      [
+        "☀️",
+        "✨",
+        "🌌"
+      ],
+      [
+        "☀️",
+        "→",
+        "🌍"
+      ],
+      [
+        "☀️",
+        "→",
+        "🌙"
+      ]
+    ]
+  },
+  "c-borboleta": {
+    "predictionPrompt": "O que sai da crisálida ao final dessa transformação?",
+    "predictions": [
+      "Uma borboleta adulta",
+      "Uma lagarta recém-nascida"
+    ],
+    "comparePrompt": "Como o corpo do animal mudou da fase de ovo à fase adulta?",
+    "ask": "Depois da fase de crisálida, o que costuma aparecer?",
+    "choices": [
+      [
+        "borboleta",
+        "Uma borboleta adulta"
+      ],
+      [
+        "peixe",
+        "Uma lagarta recém-nascida"
+      ],
+      [
+        "passaro",
+        "Um ovo novo sem adulto"
+      ]
+    ],
+    "explain": "Borboletas passam por ovo, lagarta, pupa (crisálida) e adulto. O tempo de transformação depende da espécie e das condições do ambiente.",
+    "actions": [
+      [
+        "🥚",
+        "Ver o início: ovo e lagarta",
+        "🥚 → 🐛",
+        "Do ovo nasce uma lagarta, que se alimenta e cresce."
+      ],
+      [
+        "🟤",
+        "Ver a fase de crisálida",
+        "🐛 → 🟤",
+        "A lagarta se transforma em pupa, protegida por uma crisálida."
+      ],
+      [
+        "🦋",
+        "Ver a fase adulta",
+        "🟤 → 🦋",
+        "Da crisálida emerge a borboleta adulta, com asas."
+      ]
+    ],
+    "visuals": [
+      [
+        "🥚",
+        "→",
+        "🐛"
+      ],
+      [
+        "🐛",
+        "→",
+        "🟤"
+      ],
+      [
+        "🟤",
+        "→",
+        "🦋"
+      ]
+    ]
+  }
+};
 const SCIENCE_DISCOVERIES=[
  {id:'c-plantas',title:'O que a plantinha precisa?',desc:'Compare a plantinha com água e sem água.',icon:'🌱',ask:'O que uma planta precisa para crescer saudável?',choices:[['agua','Água, luz e nutrientes'],['brinquedos','Apenas brinquedos'],['escuro','Só escuridão']],right:'agua',explain:'Plantas precisam de água, luz e nutrientes. Os efeitos reais levam tempo; este desenho é ilustrativo.',actions:[['💧','Regar a planta','🌿💧','Com água e boas condições, a planta pode continuar crescendo.'],['🏜️','Deixar sem água','🌱☀️','Sem água por tempo suficiente, muitas plantas murcham.']]},
  {id:'c-flutua',title:'Flutua ou afunda?',desc:'Experimente colocar materiais na água.',icon:'🛶',ask:'Qual desses objetos geralmente flutua na água?',choices:[['madeira','Um bloco de madeira'],['pedra','Uma pedra'],['metal','Uma bola maciça de aço']],right:'madeira',explain:'Um bloco comum de madeira costuma flutuar e uma pedra costuma afundar. A forma e o material fazem diferença.',actions:[['🪵','Colocar madeira','🪵🌊','O bloco de madeira permanece na superfície.'],['🪨','Colocar pedra','🌊🪨','A pedra desce para o fundo.']]},
@@ -26,7 +505,7 @@ const SCIENCE_DISCOVERIES=[
  {id:'c-agua',title:'Gelo e água',desc:'Veja o que pode acontecer com o gelo.',icon:'🧊',ask:'O que acontece com o gelo quando recebe calor suficiente?',choices:[['derrete','Derrete e vira água líquida'],['vira-pedra','Vira pedra'],['cresce','Cresce para sempre']],right:'derrete',explain:'Gelo é água no estado sólido. Ao receber calor suficiente, derrete e passa ao estado líquido.',actions:[['❄️','Deixar bem frio','🧊🧊','Em temperatura adequada, a água pode permanecer congelada.'],['☀️','Aquecer no desenho','🧊 → 💧','Com calor suficiente, o gelo derrete. Experimente apenas no desenho!']]},
  {id:'c-sol',title:'O que é o Sol?',desc:'Compare o Sol e um planeta.',icon:'☀️',ask:'O Sol é…',choices:[['estrela','Uma estrela'],['planeta','Um planeta'],['lua','Uma lua']],right:'estrela',explain:'O Sol é uma estrela. A Terra é um planeta que orbita o Sol.',actions:[['☀️','Observar o Sol','☀️ ✨','O Sol produz sua própria luz. Nunca olhe diretamente para ele.'],['🌍','Observar a Terra','🌍 🌙','A Terra é um planeta, iluminado pelo Sol.']]},
  {id:'c-borboleta',title:'Vida da borboleta',desc:'Observe fases da metamorfose.',icon:'🦋',ask:'Qual animal aparece ao final dessa transformação?',choices:[['borboleta','Borboleta adulta'],['peixe','Peixe'],['passaro','Passarinho']],right:'borboleta',explain:'No ciclo ilustrado, a borboleta passa por ovo, lagarta, crisálida e borboleta adulta.',actions:[['🥚','Ver começo do ciclo','🥚 → 🐛','De um ovo nasce uma lagarta.'],['🦋','Ver etapa final','🐛 → 🟤 → 🦋','A lagarta forma uma crisálida, da qual emerge a borboleta adulta.']]}
-].map(x=>({...x,world:'science',type:'discovery',questions:1}));
+] .map(x=>({...x,...SCIENCE_CLASSIC_GUIDES[x.id],world:'science',type:'investigation',questions:1}));
 
 // Investigações autorais de Ciências — referências e limites em docs/ciencias-referencias.md
 const SCIENCE_TOPICS={"corpo":"🫶 Corpo e cuidados","materiais":"🧪 Materiais e descobertas","vida":"🌿 Natureza e seres vivos","terra":"🌞 Terra, luz e tempo"};
