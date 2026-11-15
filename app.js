@@ -17,6 +17,485 @@ const BASE_MISSIONS=[
  {id:'c-dia-noite',world:'science',title:'Como nasce a noite?',desc:'Gire a Terra e observe onde está iluminado.',icon:'🌎',type:'daynight',questions:1}
 ];
 // Laboratórios de observação ilustrados, com duas experiências antes da pergunta.
+// Guia de investigação das oito missões clássicas: mantém seus IDs e pontuações.
+const SCIENCE_CLASSIC_GUIDES={
+  "c-plantas": {
+    "predictionPrompt": "O que ajuda uma planta a continuar crescendo?",
+    "predictions": [
+      "Água e luz adequada",
+      "Ficar muitos dias sem água"
+    ],
+    "comparePrompt": "O que muda quando falta água ou luz durante muito tempo?",
+    "ask": "O que uma planta geralmente precisa para crescer bem?",
+    "choices": [
+      [
+        "agua",
+        "Água, luz adequada e nutrientes"
+      ],
+      [
+        "brinquedos",
+        "Apenas água, sempre no escuro"
+      ],
+      [
+        "escuro",
+        "Apenas luz, nunca água"
+      ]
+    ],
+    "explain": "Plantas geralmente precisam de água, luz adequada, ar e nutrientes. Os efeitos demoram dias ou semanas. Cada espécie tolera condições diferentes.",
+    "actions": [
+      [
+        "💧",
+        "Dar água e luz adequadas",
+        "☀️ 💧 🌿",
+        "Com água, luz e boas condições, uma planta pode continuar crescendo ao longo dos dias."
+      ],
+      [
+        "🏜️",
+        "Passar vários dias sem água",
+        "☀️ 🌱 🥀",
+        "Sem água por tempo suficiente, muitas plantas murcham."
+      ],
+      [
+        "🌑",
+        "Passar muito tempo sem luz",
+        "🌑 🪴",
+        "Sem luz suficiente durante muito tempo, muitas plantas enfraquecem."
+      ]
+    ],
+    "visuals": [
+      [
+        "☀️",
+        "💧",
+        "🌿"
+      ],
+      [
+        "☀️",
+        "🚫💧",
+        "🥀"
+      ],
+      [
+        "🌑",
+        "🪴",
+        "🍃"
+      ]
+    ]
+  },
+  "c-flutua": {
+    "predictionPrompt": "Na água, um bloco comum de madeira e uma pedra vão…",
+    "predictions": [
+      "Madeira flutua; pedra afunda",
+      "Os dois afundam"
+    ],
+    "comparePrompt": "A água é a mesma: o que ficou na superfície e o que foi para o fundo?",
+    "ask": "O que vimos acontecer com o bloco de madeira e a pedra?",
+    "choices": [
+      [
+        "madeira",
+        "Madeira flutuou e pedra afundou"
+      ],
+      [
+        "pedra",
+        "Pedra flutuou e madeira afundou"
+      ],
+      [
+        "metal",
+        "Os dois sempre ficaram na superfície"
+      ]
+    ],
+    "explain": "Muitos blocos de madeira flutuam e pedras comuns afundam. O material, a densidade média e o formato influenciam. Não depende só do peso do objeto.",
+    "actions": [
+      [
+        "🪵",
+        "Testar bloco de madeira comum",
+        "🪵〰️🌊",
+        "Neste modelo, o bloco de madeira fica na superfície."
+      ],
+      [
+        "🪨",
+        "Testar pedra comum",
+        "🌊⬇️🪨",
+        "Neste modelo, a pedra desce para o fundo."
+      ],
+      [
+        "⛵",
+        "Ver um barco com ar dentro",
+        "⛵🌊",
+        "Um barco pode flutuar graças ao formato e à água deslocada, mesmo sendo feito de metal."
+      ]
+    ],
+    "visuals": [
+      [
+        "🪵",
+        "〰️",
+        "💧"
+      ],
+      [
+        "💧",
+        "⬇️",
+        "🪨"
+      ],
+      [
+        "⛵",
+        "〰️",
+        "🌊"
+      ]
+    ]
+  },
+  "c-ima": {
+    "predictionPrompt": "Qual objeto vai ser atraído por um ímã escolar?",
+    "predictions": [
+      "Um clipe de aço com ferro",
+      "Uma tampinha de plástico"
+    ],
+    "comparePrompt": "O ímã atraiu todos os materiais ou apenas alguns?",
+    "ask": "Qual objeto costuma ser atraído por um ímã comum?",
+    "choices": [
+      [
+        "clipe",
+        "Um clipe de aço contendo ferro"
+      ],
+      [
+        "papel",
+        "Uma folha de papel"
+      ],
+      [
+        "plastico",
+        "Uma tampinha plástica"
+      ]
+    ],
+    "explain": "Muitos clipes de aço contêm ferro e são atraídos pelo ímã. Papel, plástico e alumínio comum não são fortemente atraídos; nem todo metal é magnético.",
+    "actions": [
+      [
+        "📎",
+        "Aproximar o clipe de aço",
+        "🧲 ✨ 📎",
+        "Um clipe comum de aço com ferro pode ser atraído pelo ímã."
+      ],
+      [
+        "📄",
+        "Aproximar uma folha de papel",
+        "🧲  📄",
+        "O papel não é atraído pelo ímã comum."
+      ],
+      [
+        "🧩",
+        "Aproximar plástico",
+        "🧲  🧩",
+        "O plástico não é atraído pelo ímã comum."
+      ],
+      [
+        "🥫",
+        "Aproximar alumínio comum",
+        "🧲  🥫",
+        "O alumínio não é fortemente atraído por um ímã escolar comum."
+      ]
+    ],
+    "visuals": [
+      [
+        "🧲",
+        "✨",
+        "📎"
+      ],
+      [
+        "🧲",
+        "↛",
+        "📄"
+      ],
+      [
+        "🧲",
+        "↛",
+        "🧩"
+      ],
+      [
+        "🧲",
+        "↛",
+        "🥫"
+      ]
+    ]
+  },
+  "c-sombras": {
+    "predictionPrompt": "Se a luz vier da esquerda, a sombra do brinquedo aparece…",
+    "predictions": [
+      "À direita",
+      "À esquerda"
+    ],
+    "comparePrompt": "O que mudou de lado quando a lanterna mudou de posição?",
+    "ask": "Onde a sombra costuma aparecer em relação à luz?",
+    "choices": [
+      [
+        "oposto",
+        "No lado oposto à fonte de luz"
+      ],
+      [
+        "mesmo",
+        "Sempre do mesmo lado da luz"
+      ],
+      [
+        "dentro",
+        "Sempre embaixo, em qualquer posição"
+      ]
+    ],
+    "explain": "Objetos opacos bloqueiam a passagem da luz e podem formar sombra no lado oposto à fonte. A posição da parede também influencia a sombra projetada.",
+    "visuals": [
+      [
+        "🔦",
+        "→",
+        "🧸",
+        "⬛"
+      ],
+      [
+        "⬛",
+        "🧸",
+        "←",
+        "🔦"
+      ]
+    ]
+  },
+  "c-som": {
+    "predictionPrompt": "Ao tocar um tambor, o que acontece com a pele dele?",
+    "predictions": [
+      "Ela vibra",
+      "Ela continua totalmente parada"
+    ],
+    "comparePrompt": "O que mudou entre o tambor tocado e o tambor parado?",
+    "ask": "O que produz o som do tambor quando o tocamos?",
+    "choices": [
+      [
+        "vibracao",
+        "A vibração da membrana"
+      ],
+      [
+        "cor",
+        "A cor pintada no tambor"
+      ],
+      [
+        "silencio",
+        "O ar parado sem vibração"
+      ]
+    ],
+    "explain": "Ao tocar, a membrana do tambor vibra e faz o ar vibrar, formando ondas sonoras. Tocar de formas diferentes muda o som. O desenho representa vibrações, mas não reproduz som real.",
+    "actions": [
+      [
+        "🥁",
+        "Tocar o tambor",
+        "🥁 〰️〰️",
+        "A membrana vibra e produz som."
+      ],
+      [
+        "✋",
+        "Deixar o tambor parar",
+        "🥁 ⏸️",
+        "Quando o tambor para de vibrar, ele deixa de produzir esse som."
+      ],
+      [
+        "👆",
+        "Tocar bem de leve",
+        "👆 🥁 〰️",
+        "Um toque leve costuma fazer uma vibração menor e um som mais suave."
+      ]
+    ],
+    "visuals": [
+      [
+        "🥁",
+        "〰️",
+        "👂"
+      ],
+      [
+        "✋",
+        "🥁",
+        "🔇"
+      ],
+      [
+        "👆",
+        "🥁",
+        "〰️"
+      ]
+    ]
+  },
+  "c-agua": {
+    "predictionPrompt": "Se um cubo de gelo receber calor suficiente, ele vai…",
+    "predictions": [
+      "Derreter e virar água líquida",
+      "Continuar sólido para sempre"
+    ],
+    "comparePrompt": "O que mudou quando o gelo recebeu calor ou ficou mais frio?",
+    "ask": "O que acontece com o gelo quando recebe calor suficiente?",
+    "choices": [
+      [
+        "derrete",
+        "Derrete e vira água líquida"
+      ],
+      [
+        "vira-pedra",
+        "Continua congelado mesmo com calor suficiente"
+      ],
+      [
+        "cresce",
+        "Forma cada vez mais gelo ao aquecer"
+      ]
+    ],
+    "explain": "Gelo é água sólida. Ao receber energia suficiente, pode derreter e virar água líquida; se resfriar o bastante, a água pode congelar novamente. Experimente apenas no desenho.",
+    "actions": [
+      [
+        "❄️",
+        "Manter bem frio no desenho",
+        "❄️ 🧊",
+        "Em temperatura suficientemente baixa, a água continua sólida."
+      ],
+      [
+        "☀️",
+        "Adicionar calor no desenho",
+        "🧊 → 💧",
+        "Com calor suficiente, o gelo derrete e vira água líquida."
+      ],
+      [
+        "🧊",
+        "Resfriar a água no desenho",
+        "💧 → 🧊",
+        "Se esfriar o bastante, a água pode congelar novamente."
+      ]
+    ],
+    "visuals": [
+      [
+        "❄️",
+        "🧊",
+        "❄️"
+      ],
+      [
+        "☀️",
+        "🧊",
+        "💧"
+      ],
+      [
+        "❄️",
+        "💧",
+        "🧊"
+      ]
+    ]
+  },
+  "c-sol": {
+    "predictionPrompt": "Quem emite luz própria: o Sol ou a Terra?",
+    "predictions": [
+      "O Sol",
+      "A Terra"
+    ],
+    "comparePrompt": "Quem emite luz, e quem recebe e reflete a luz solar?",
+    "ask": "Qual objeto apresentado produz sua própria luz?",
+    "choices": [
+      [
+        "estrela",
+        "O Sol, que é uma estrela"
+      ],
+      [
+        "planeta",
+        "A Terra, porque é planeta"
+      ],
+      [
+        "lua",
+        "A Lua, por refletir luz"
+      ]
+    ],
+    "explain": "O Sol é uma estrela que emite luz. A Terra e a Lua recebem luz solar e refletem parte dela. Nunca olhe diretamente para o Sol: use apenas este desenho.",
+    "actions": [
+      [
+        "☀️",
+        "Observar o Sol no desenho",
+        "☀️ ✨",
+        "O Sol é uma estrela que emite sua própria luz."
+      ],
+      [
+        "🌍",
+        "Observar a Terra",
+        "☀️ → 🌍",
+        "A Terra é um planeta, iluminado pelo Sol."
+      ],
+      [
+        "🌙",
+        "Observar a Lua",
+        "☀️ → 🌙",
+        "A Lua reflete parte da luz solar que chega até ela."
+      ]
+    ],
+    "visuals": [
+      [
+        "☀️",
+        "✨",
+        "🌌"
+      ],
+      [
+        "☀️",
+        "→",
+        "🌍"
+      ],
+      [
+        "☀️",
+        "→",
+        "🌙"
+      ]
+    ]
+  },
+  "c-borboleta": {
+    "predictionPrompt": "O que sai da crisálida ao final dessa transformação?",
+    "predictions": [
+      "Uma borboleta adulta",
+      "Uma lagarta recém-nascida"
+    ],
+    "comparePrompt": "Como o corpo do animal mudou da fase de ovo à fase adulta?",
+    "ask": "Depois da fase de crisálida, o que costuma aparecer?",
+    "choices": [
+      [
+        "borboleta",
+        "Uma borboleta adulta"
+      ],
+      [
+        "peixe",
+        "Uma lagarta recém-nascida"
+      ],
+      [
+        "passaro",
+        "Um ovo novo sem adulto"
+      ]
+    ],
+    "explain": "Borboletas passam por ovo, lagarta, pupa (crisálida) e adulto. O tempo de transformação depende da espécie e das condições do ambiente.",
+    "actions": [
+      [
+        "🥚",
+        "Ver o início: ovo e lagarta",
+        "🥚 → 🐛",
+        "Do ovo nasce uma lagarta, que se alimenta e cresce."
+      ],
+      [
+        "🟤",
+        "Ver a fase de crisálida",
+        "🐛 → 🟤",
+        "A lagarta se transforma em pupa, protegida por uma crisálida."
+      ],
+      [
+        "🦋",
+        "Ver a fase adulta",
+        "🟤 → 🦋",
+        "Da crisálida emerge a borboleta adulta, com asas."
+      ]
+    ],
+    "visuals": [
+      [
+        "🥚",
+        "→",
+        "🐛"
+      ],
+      [
+        "🐛",
+        "→",
+        "🟤"
+      ],
+      [
+        "🟤",
+        "→",
+        "🦋"
+      ]
+    ]
+  }
+};
 const SCIENCE_DISCOVERIES=[
  {id:'c-plantas',title:'O que a plantinha precisa?',desc:'Compare a plantinha com água e sem água.',icon:'🌱',ask:'O que uma planta precisa para crescer saudável?',choices:[['agua','Água, luz e nutrientes'],['brinquedos','Apenas brinquedos'],['escuro','Só escuridão']],right:'agua',explain:'Plantas precisam de água, luz e nutrientes. Os efeitos reais levam tempo; este desenho é ilustrativo.',actions:[['💧','Regar a planta','🌿💧','Com água e boas condições, a planta pode continuar crescendo.'],['🏜️','Deixar sem água','🌱☀️','Sem água por tempo suficiente, muitas plantas murcham.']]},
  {id:'c-flutua',title:'Flutua ou afunda?',desc:'Experimente colocar materiais na água.',icon:'🛶',ask:'Qual desses objetos geralmente flutua na água?',choices:[['madeira','Um bloco de madeira'],['pedra','Uma pedra'],['metal','Uma bola maciça de aço']],right:'madeira',explain:'Um bloco comum de madeira costuma flutuar e uma pedra costuma afundar. A forma e o material fazem diferença.',actions:[['🪵','Colocar madeira','🪵🌊','O bloco de madeira permanece na superfície.'],['🪨','Colocar pedra','🌊🪨','A pedra desce para o fundo.']]},
@@ -26,7 +505,7 @@ const SCIENCE_DISCOVERIES=[
  {id:'c-agua',title:'Gelo e água',desc:'Veja o que pode acontecer com o gelo.',icon:'🧊',ask:'O que acontece com o gelo quando recebe calor suficiente?',choices:[['derrete','Derrete e vira água líquida'],['vira-pedra','Vira pedra'],['cresce','Cresce para sempre']],right:'derrete',explain:'Gelo é água no estado sólido. Ao receber calor suficiente, derrete e passa ao estado líquido.',actions:[['❄️','Deixar bem frio','🧊🧊','Em temperatura adequada, a água pode permanecer congelada.'],['☀️','Aquecer no desenho','🧊 → 💧','Com calor suficiente, o gelo derrete. Experimente apenas no desenho!']]},
  {id:'c-sol',title:'O que é o Sol?',desc:'Compare o Sol e um planeta.',icon:'☀️',ask:'O Sol é…',choices:[['estrela','Uma estrela'],['planeta','Um planeta'],['lua','Uma lua']],right:'estrela',explain:'O Sol é uma estrela. A Terra é um planeta que orbita o Sol.',actions:[['☀️','Observar o Sol','☀️ ✨','O Sol produz sua própria luz. Nunca olhe diretamente para ele.'],['🌍','Observar a Terra','🌍 🌙','A Terra é um planeta, iluminado pelo Sol.']]},
  {id:'c-borboleta',title:'Vida da borboleta',desc:'Observe fases da metamorfose.',icon:'🦋',ask:'Qual animal aparece ao final dessa transformação?',choices:[['borboleta','Borboleta adulta'],['peixe','Peixe'],['passaro','Passarinho']],right:'borboleta',explain:'No ciclo ilustrado, a borboleta passa por ovo, lagarta, crisálida e borboleta adulta.',actions:[['🥚','Ver começo do ciclo','🥚 → 🐛','De um ovo nasce uma lagarta.'],['🦋','Ver etapa final','🐛 → 🟤 → 🦋','A lagarta forma uma crisálida, da qual emerge a borboleta adulta.']]}
-].map(x=>({...x,world:'science',type:'discovery',questions:1}));
+] .map(x=>({...x,...SCIENCE_CLASSIC_GUIDES[x.id],world:'science',type:'investigation',questions:1}));
 
 // Investigações autorais de Ciências — referências e limites em docs/ciencias-referencias.md
 const SCIENCE_TOPICS={"corpo":"🫶 Corpo e cuidados","materiais":"🧪 Materiais e descobertas","vida":"🌿 Natureza e seres vivos","terra":"🌞 Terra, luz e tempo"};
@@ -629,6 +1108,11 @@ function earthDotStyle(){const deg=session.angle*Math.PI/180;return `--dot-x:${5
 function earthPeriod(){return Math.cos(session.angle*Math.PI/180)>=0?'DIA ☀️':'NOITE 🌙'}
 function dayNightBoard(){return `<div class="question-lead"><span>🌎 LABORATÓRIO ESPACIAL</span><button type="button" class="listen" data-speak="1">🔊 Ouvir</button></div><h2>Por que temos dia e noite?</h2><p class="question-sub">Gire a Terra e acompanhe o pontinho amarelo. Ele está do lado claro ou escuro?</p><div class="experiment-board earth-board"><div class="sun" aria-hidden="true">☀️</div><div class="space-rays"></div><div class="earth-disc" role="img" aria-label="Modelo simplificado da Terra, com metade iluminada pelo Sol"><div class="day-mask"></div><div id="location-dot" class="location-dot" style="${earthDotStyle()}"></div></div><span class="sun-label">SOL</span><span class="earth-labels" id="earth-period">NO PONTINHO: ${earthPeriod()}</span></div><p class="disclaimer">Modelo ilustrativo visto de cima, fora de escala. O Sol permanece à esquerda; a Terra gira.</p><div class="experiment-control"><label for="angle">Gire a Terra: <strong id="angle-label">${session.angle}°</strong></label><input id="angle" type="range" min="0" max="360" step="10" value="${session.angle}"><div class="experiment-actions"><button type="button" class="btn btn-ghost" data-halfturn="1">↻ Girar meia volta</button><small>O pontinho representa um lugar na Terra.</small></div></div>${session.rotated?'<div class="tip-banner" style="margin:0"><span class="tip-icon">💡</span><div><strong>A Terra gira!</strong><p>Quando um lugar está voltado para o Sol é dia. Do outro lado é noite.</p></div></div>':''}${scienceAnswerArea('Quando um lugar da Terra está voltado para o Sol, é…',[['dia','Dia'],['noite','Noite'],['chuva','Sempre chuva']],'dia','O Sol ilumina o lado da Terra voltado para ele. No lado oposto é noite.')}`}
 function scienceAnswerArea(prompt,opts,answer,hint){if(!(session.mission.type==='gravity'?session.drops>0:session.rotated))return `<p class="activity-footnote">Primeiro faça a experiência para liberar o desafio! ✨</p>`;return `<div class="experiment-answer"><h3>${prompt}</h3><div class="choice-grid" role="group" aria-label="Escolha sua resposta">${opts.map(([id,label])=>`<button type="button" class="choice ${session.resolved&&id===answer?'correct':''} ${session.wrongOptions.has(id)?'wrong':''}" style="font-size:15px" data-science-answer="${id}" ${session.resolved||session.wrongOptions.has(id)?'disabled':''}>${label}</button>`).join('')}</div>${feedbackHtml()}</div>`}
+function scienceScene(m,scene){
+ const symbols=m.visuals?.[scene];
+ if(!Array.isArray(symbols))return escapeHtml(m.actions[scene][2]);
+ return `<div class="classic-scene" aria-hidden="true">${symbols.map((symbol,i)=>`<span class="classic-scene-token ${i%2?'connector':''}">${escapeHtml(symbol)}</span>`).join('')}</div><span class="classic-scene-caption">${escapeHtml(m.actions[scene][2])}</span>`;
+}
 function investigationBoard(){
  const m=session.mission,actions=m.actions,scene=session.exploredScene,observed=session.explored.size;
  const predicted=session.prediction!==null,finished=predicted&&observed>=2;
@@ -639,15 +1123,15 @@ function investigationBoard(){
  <h2>${escapeHtml(m.title)}</h2><p class="question-sub">Faça uma previsão, compare situações e descubra o resultado.</p>
  <div class="inquiry-steps" aria-label="Etapas da investigação"><span class="${stepClass(1)}">1. Imagine</span><span class="${stepClass(2)}">2. Teste</span><span class="${stepClass(3)}">3. Descubra</span></div>
  <section class="inquiry-stage"><h3>💭 O que você acha?</h3><p>${escapeHtml(m.predictionPrompt)}</p>
- <div class="inquiry-predictions" role="group" aria-label="Escolha sua previsão">${m.predictions.map((a,i)=>`<button type="button" class="inquiry-guess ${session.prediction===i?'chosen':''}" data-predict="${i}" aria-pressed="${session.prediction===i}" ${session.resolved?'disabled':''}>${escapeHtml(a)}</button>`).join('')}</div><small>É uma hipótese: não há erro em imaginar!</small></section>
+ <div class="inquiry-predictions" role="group" aria-label="Escolha sua previsão">${m.predictions.map((a,i)=>`<button type="button" class="inquiry-guess ${session.prediction===i?'chosen':''}" data-predict="${i}" aria-pressed="${session.prediction===i}" ${session.explored.size>0||session.resolved?'disabled':''}>${escapeHtml(a)}</button>`).join('')}</div><small>É uma hipótese: não há erro em imaginar!</small></section>
  <section class="inquiry-stage"><h3>🧪 Hora de testar</h3><p>${predicted?'Escolha duas situações diferentes e observe o que muda.':'Escolha uma hipótese acima para começar.'}</p>
  <div class="discovery-actions" role="group" aria-label="Testes da investigação">${tests}</div>
  <div class="discovery-display inquiry-scene" role="group" aria-label="Resultado ilustrado do teste">
- <div class="discovery-picture" aria-live="polite">${scene===null?escapeHtml(m.icon):escapeHtml(actions[scene][2])}</div>
+ <div class="discovery-picture" aria-live="polite">${scene===null?escapeHtml(m.icon):scienceScene(m,scene)}</div>
  <p class="discovery-observation" role="status">${scene===null?'Faça um teste para ver o que acontece.':escapeHtml(actions[scene][3])}</p></div>
  <p class="inquiry-status">${observed} de 2 situações diferentes observadas${finished?' ✓':''}</p></section>
  ${finished?`<section class="inquiry-stage"><h3>🔎 Compare o que você viu</h3>
- <div class="inquiry-evidence-grid">${compare}</div>
+ ${m.comparePrompt?`<p class="inquiry-comparison-prompt">💡 ${escapeHtml(m.comparePrompt)}</p>`:""}<div class="inquiry-evidence-grid">${compare}</div>
  <div class="experiment-answer"><h3>${escapeHtml(m.ask)}</h3><div class="choice-grid" role="group" aria-label="Escolha a resposta depois dos testes">${m.choices.map(([id,label])=>`<button type="button" class="choice ${session.resolved&&id===m.right?'correct':''} ${session.wrongOptions.has(id)?'wrong':''}" data-science-answer="${escapeHtml(id)}" ${session.resolved||session.wrongOptions.has(id)?'disabled':''}>${escapeHtml(label)}</button>`).join('')}</div>${feedbackHtml()}</div></section>`:
  `<p class="activity-footnote">✨ ${!predicted?'Primeiro escolha uma previsão.':observed===0?'Agora faça dois testes diferentes.':'Muito bem! Experimente outra situação para comparar.'}</p>`}
  <p class="inquiry-safety">Estas cenas são modelos ilustrados. Algumas mudanças reais demoram ou variam com as condições.</p>`;
@@ -723,7 +1207,7 @@ function next(){if(!session||!session.resolved)return;session.step++;if(session.
 function openGate(){previousView=view;gateAnswer=random(5,9)+random(2,5);const a=random(5,9),b=random(2,5);gateAnswer=a+b;$('gate-root').innerHTML=`<div class="gate-backdrop" role="presentation"><form class="gate-modal" id="gate-form" aria-label="Acessar espaço dos responsáveis"><h2>👨‍👩‍👧 Espaço da família</h2><p>Uma continha rápida para evitar que esta área seja aberta sem querer.</p><label for="parent-gate-input"><strong>Quanto é ${a} + ${b}?</strong></label><input type="number" id="parent-gate-input" autocomplete="off" required inputmode="numeric"><div id="gate-error" class="gate-error" role="status"></div><div class="gate-actions"><button type="button" class="btn btn-outline" data-gate-close="1">Cancelar</button><button class="btn btn-primary" type="submit">Entrar</button></div></form></div>`;$('parent-gate-input').focus()}
 function closeGate(){$('gate-root').innerHTML=''}
 function enterParents(){if(parentAllowed){navigate('parents');return}openGate()}
-function speak(){if(!('speechSynthesis'in window)){alert('Seu navegador não oferece leitura em voz alta.');return}const m=session?.mission;let text=m?.world==='science'?(m.type==='gravity'?'O que acontece quando soltamos a bola? Escolha uma altura e solte a bola.':m.type==='daynight'?'Por que temos dia e noite? Gire a Terra e observe o pontinho amarelo.':m.title+'. '+m.desc+'. '+m.ask):session?.question?.prompt||session?.question?.text;if(!text)return;window.speechSynthesis.cancel();const voice=new SpeechSynthesisUtterance(text);voice.lang='pt-BR';voice.rate=.85;window.speechSynthesis.speak(voice)}
+function speak(){if(!('speechSynthesis'in window)){alert('Seu navegador não oferece leitura em voz alta.');return}const m=session?.mission;let text=m?.world==='science'?(m.type==='gravity'?'O que acontece quando soltamos a bola? Escolha uma altura e solte a bola.':m.type==='daynight'?'Por que temos dia e noite? Gire a Terra e observe o pontinho amarelo.':(m.type==='investigation'&&session?.explored.size<2?m.title+'. '+m.predictionPrompt:m.title+'. '+m.ask)):session?.question?.prompt||session?.question?.text;if(!text)return;window.speechSynthesis.cancel();const voice=new SpeechSynthesisUtterance(text);voice.lang='pt-BR';voice.rate=.85;window.speechSynthesis.speak(voice)}
 function updateEarth(){if(!session)return;const dot=$('location-dot');if(dot)dot.setAttribute('style',earthDotStyle());const label=$('angle-label');if(label)label.textContent=session.angle+'°';const period=$('earth-period');if(period)period.textContent='NO PONTINHO: '+earthPeriod();}
 function dropBall(){if(!session||session.mission.type!=='gravity'||session.dropping)return;session.released=false;session.dropping=true;const ball=document.querySelector('.gravity-ball');if(ball){ball.classList.remove('ground');void ball.offsetWidth;ball.classList.add('ground')}const btn=document.querySelector('[data-drop]');if(btn)btn.disabled=true;gravityTimeout=setTimeout(()=>{if(!session||view!=='activity'||session.mission.type!=='gravity')return;session.released=true;session.dropping=false;session.drops++;render()},800)}
 function halfTurn(){if(!session||session.mission.type!=='daynight')return;session.angle=(session.angle+180)%360;session.rotated=true;render()}
@@ -736,7 +1220,7 @@ document.addEventListener('click',e=>{const btn=e.target.closest('button');if(!b
  if(btn.dataset.start){start(btn.dataset.start);return}
  if(btn.dataset.answer!==undefined){answer(btn.dataset.answer);return}
  if(btn.dataset.scienceAnswer!==undefined){answer(btn.dataset.scienceAnswer);return}
- if(btn.dataset.predict!==undefined&&view==='activity'&&session?.mission.type==='investigation'){const index=Number(btn.dataset.predict);if(Number.isInteger(index)&&index>=0&&index<session.mission.predictions.length){session.prediction=index;render()}return}
+ if(btn.dataset.predict!==undefined&&view==='activity'&&session?.mission.type==='investigation'){const index=Number(btn.dataset.predict);if(session.explored.size===0&&Number.isInteger(index)&&index>=0&&index<session.mission.predictions.length){session.prediction=index;render()}return}
  if(btn.dataset.explore!==undefined&&view==='activity'&&['discovery','investigation'].includes(session?.mission.type)){const index=Number(btn.dataset.explore);if(session.mission.type==='investigation'&&session.prediction===null)return;if(Number.isInteger(index)&&index>=0&&index<session.mission.actions.length){session.explored.add(index);session.exploredScene=index;render()}return}
  if(btn.dataset.object!==undefined){let s=btn.dataset.object;session?.marked.has(s)?session.marked.delete(s):session?.marked.add(s);btn.classList.toggle('marked',!!session?.marked.has(s));btn.setAttribute('aria-pressed',session?.marked.has(s)?'true':'false');return}
  if(btn.dataset.next){next();return}

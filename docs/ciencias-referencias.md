@@ -40,3 +40,20 @@ O catálogo anterior somava 10 experiências de Ciências: 2 com interação dir
 ## Próxima revisão pedagógica recomendada
 
 Um(a) pedagogo(a) ou professor(a) dos anos iniciais pode revisar os enunciados, nível de leitura e mapeamento curricular antes de anunciar alinhamento BNCC formal. Um teste supervisionado com crianças de 6 a 8 anos pode mostrar se os botões, cenas, vocabulário e etapas estão claros.
+
+## Modernização das oito clássicas — novembro de 2026
+
+As atividades `c-plantas`, `c-flutua`, `c-ima`, `c-sombras`, `c-som`, `c-agua`, `c-sol` e `c-borboleta` passaram do formato apenas de observação para o percurso de hipótese, teste e comparação já existente nas dez investigações recentes. A hipótese fica registrada quando o primeiro teste começa e **não influencia estrelas**.
+
+- **Plantas**: água, luz e tempo; não confundir efeitos que demoram dias com mudanças imediatas
+- **Flutuação**: madeira e pedra; acrescentado barco para mostrar importância do formato e evitar a regra falsa de que “tudo que pesa afunda”
+- **Ímãs**: aço contendo ferro versus papel, plástico e alumínio; nem todo metal é magnético
+- **Sombras**: inversão do lado da sombra conforme se move a fonte de luz; posição da parede também importa
+- **Som**: tambor vibrando, parado e tocado de leve; não há som real de tambor, apenas desenho da vibração
+- **Gelo**: derretimento e congelamento ilustrados sem manipulação física de calor
+- **Sol**: luz própria de estrela versus luz refletida pela Terra e Lua; orientação de não olhar para o Sol diretamente
+- **Borboleta**: ovo, lagarta, crisálida e adulto, destacando que cada espécie tem seu ritmo
+
+IDs, registros de aprendizagem e estrelas anteriores permanecem válidos. O total segue em 96 missões, das quais 20 de Ciências (18 investigações e duas simulações). Não há alterações de banco, cadastro público nem coleta de novas informações.
+
+Referências complementares: [Science Learning Hub — Investigating floating and sinking](https://www.sciencelearn.org.nz/resources/3184-investigating-floating-and-sinking) (prever, observar e explicar) e [NASA Space Place — Earth](https://spaceplace.nasa.gov/menu/kids/earth/) (Sol, Terra e luz).

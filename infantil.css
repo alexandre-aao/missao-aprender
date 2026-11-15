@@ -230,3 +230,26 @@ a.btn{text-decoration:none}
  .inquiry-stage .discovery-action{flex:1 1 100%;width:100%}
  .inquiry-stage .choice{font-size:15px}
 }
+
+/* Laboratórios clássicos: ilustração que muda conforme cada condição observada. */
+.classic-scene{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:9px;max-width:100%;margin:2px auto 8px}
+.classic-scene-token{display:inline-flex;align-items:center;justify-content:center;min-width:54px;min-height:62px;padding:4px 8px;font-size:clamp(29px,5vw,51px);line-height:1.15;border-radius:16px;background:rgba(255,255,255,.88);box-shadow:0 5px 14px rgba(78,67,130,.1)}
+.classic-scene-token.connector{background:transparent;box-shadow:none;min-width:25px;padding:0;font-size:clamp(19px,3vw,34px)}
+.classic-scene-caption{display:block;font-size:clamp(15px,2.4vw,21px);line-height:1.4;color:#5e5880;font-weight:800;letter-spacing:.01em;overflow-wrap:anywhere}
+.inquiry-comparison-prompt{background:#f0f7ff;border-left:4px solid #7ab4ee;border-radius:10px;padding:13px 15px;color:#415574!important;font-weight:750}
+.inquiry-guess:disabled{cursor:default;opacity:1}
+.inquiry-guess.chosen:disabled{background:#e4f6ef;border-color:#61b38f;color:#285d44}
+@media(max-width:600px){
+ .classic-scene{gap:5px}
+ .classic-scene-token{min-width:40px;min-height:48px;padding:2px 5px;font-size:clamp(25px,7.5vw,34px);border-radius:12px}
+ .classic-scene-token.connector{min-width:20px;font-size:23px}
+ .classic-scene-caption{font-size:14px}
+ .inquiry-comparison-prompt{padding:11px 12px}
+}
+@media(prefers-reduced-motion:no-preference){
+ .classic-scene-token{animation:scene-appear .3s ease-out both}
+ .classic-scene-token:nth-child(2){animation-delay:.07s}
+ .classic-scene-token:nth-child(3){animation-delay:.14s}
+ .classic-scene-token:nth-child(4){animation-delay:.21s}
+}
+@keyframes scene-appear{from{opacity:.3;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
