@@ -23,11 +23,14 @@ with sync_playwright() as p:
     for mid in SC:
         start_mission(page,mid)
         assert page.locator('[data-science-answer]').count()==0,(mid,'question not locked')
+        assert page.locator('[data-predict]').count()==2,(mid,'hypothesis missing')
+        page.locator('[data-predict="0"]').click()
         actions=page.locator('[data-explore]')
         assert actions.count()>=2
         actions.nth(0).click()
         assert page.locator('[data-science-answer]').count()==0,(mid,'unlocked after one action')
         page.locator('[data-explore]').nth(1).click()
+        assert page.locator('.inquiry-comparison-prompt').count()==1,(mid,'comparison missing')
         assert page.locator('[data-science-answer]').count()==3,(mid,'not unlocked after two actions')
         answer=page.evaluate('window.MissaoAprenderTest.getCurrentAnswer()')
         assert answer
