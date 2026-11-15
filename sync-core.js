@@ -42,7 +42,7 @@ export function normalizarEstado(input) {
   assert(plain(v)&&MISSIONS_SET.has(v.id)&&stamp(v.date),'Registro de progresso inválido.');
   assert(typeof v.firstTry==='boolean'&&nint(v.errors,200),'Resultado inválido.');
   if(v.eventId!==undefined)assert(typeof v.eventId==='string' && /^[a-zA-Z0-9-]{8,65}$/.test(v.eventId),'Identificador inválido.');
-  const world=['math','review','science'].includes(v.world)?v.world:'math';
+  const world=['math','review','science','words','logic','code','english','money'].includes(v.world)?v.world:'math';
   return {id:v.id,world,firstTry:v.firstTry,errors:v.errors,date:v.date,...(v.legacy===true?{legacy:true}:{}),...(v.eventId?{eventId:v.eventId}:{})};
  });
  const migrated={};if(plain(input.migrated))for(const key of ['piloto','matematica'])if(input.migrated[key]===true)migrated[key]=true;

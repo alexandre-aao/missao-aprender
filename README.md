@@ -1,6 +1,6 @@
-# Missão Aprender — 96 missões, com experiências investigativas
+# Missão Aprender — oito mundos, 140 missões
 
-Projeto educacional independente. Contém **96 missões**: 76 atividades de matemática/revisão e 20 experiências de Ciências (incluindo 10 investigações com hipóteses). Prioriza Matemática 1º ano e revisão da pré-escola, com exploração de Ciências.
+Projeto educacional independente, com foco no 1º ano e revisão da pré-escola. O catálogo reúne 96 missões anteriores e 44 de alfabetização, lógica, programação, inglês e educação financeira. Veja as [44 missões e referências pedagógicas](docs/expansao-cinco-mundos.md).
 
 Produção: https://missao-aprender.vercel.app
 Área dos responsáveis: https://missao-aprender.vercel.app/conta.html

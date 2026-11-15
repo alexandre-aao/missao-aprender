@@ -29,7 +29,7 @@ test('CSS tem menu inferior mobile, botões de toque e movimento reduzido',()=>{
  assert.match(account,/infantil\.css/);
 });
 test('área dos responsáveis tem contagem e sincronização atuais',()=>{
- assert.match(account,/96 missões disponíveis/);
+ assert.match(account,/140 missões disponíveis/);
  assert.doesNotMatch(account,/64 missões disponíveis/);
  assert.match(account,/sincronização do progresso é opcional/);
  assert.match(app,/Gerenciar conta e perfis/);

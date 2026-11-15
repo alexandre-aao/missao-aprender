@@ -89,11 +89,12 @@ const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;
 const num=n=>new Intl.NumberFormat('pt-BR',{maximumFractionDigits:2}).format(n);
 const signed=n=>n<0?`−${Math.abs(n)}`:String(n);
 const el=id=>document.getElementById(id);
-const icons=['🍓','⭐','🍎','🐟','🍪','🦋','🌸','🚗'];
+const namedIcons=[['🍓','morangos',false],['⭐','estrelas',true],['🍎','maçãs',true],['🐟','peixes',false],['🍪','biscoitos',false],['🦋','borboletas',true],['🌸','flores',true],['🚗','carrinhos',false]];
 const visItems=(n,ico)=>Array.from({length:n},()=>`<span class="vis-item">${ico}</span>`).join('');
 function opts(answer,choices){let a=[...new Set(choices.map(String))];if(!a.includes(String(answer)))a.push(String(answer));while(a.length<4)a.push(String(rand(0,50)));return a.sort(()=>Math.random()-.5).slice(0,4).includes(String(answer))?shuffle(a).slice(0,4):shuffle([String(answer),...shuffle(a.filter(x=>x!==String(answer))).slice(0,3)]);}
 function shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){let j=rand(0,i);[a[i],a[j]]=[a[j],a[i]]}return a}
 function numbers(answer,min=0,step=1){let a=new Set([String(answer)]);let tries=0;while(a.size<4&&tries++<45){let offset=pick([-3,-2,-1,1,2,3,4,-4])*step;let n=Math.round((Number(answer)+offset)*100)/100;if(n>=min)a.add(String(n))}return shuffle([...a].slice(0,4))}
+const icons=namedIcons.map(([icon])=>icon);
 const practiceHints = {
  parity:'Forme pares de dois. Veja se sobra algum item.',
  order3:'Compare os três números. Comece pelo menor.',
@@ -171,14 +172,14 @@ function question(s,level=1){
  }else if(kind==='neighbor'){
    a=rand(2,Math.min(max,7));const isBefore=rand(0,1)===0;answer=isBefore?a-1:a+1;prompt=`Qual número vem ${isBefore?'antes':'depois'} do ${a}?`;visual=`<span class="num-box">${isBefore?'❔':a-1}</span><span class="num-box">${a}</span><span class="num-box">${isBefore?a+1:'❔'}</span>`;explain=`${isBefore?'Antes':'Depois'} de ${a} vem ${answer}.`;options=close(answer);
  }else if(kind==='count'){
-   a=rand(1,Math.min(max,L===1?8:L===2?15:max));const ico=pick(icons);answer=a;prompt='Quantos desenhos você consegue contar?';visual=visItems(a,ico);explain=`Conte os desenhos um a um. Existem ${a} ao todo.`;options=close(a);
+   a=rand(1,Math.min(max,L===1?8:L===2?15:max));const [ico,name,feminine]=pick(namedIcons);answer=a;prompt=`Quant${feminine?'as':'os'} ${name} você vê?`;visual=visItems(a,ico);explain=`Conte um a um. São ${a} ao todo.`;options=close(a);
  }else if(kind==='compare'){
    a=rand(1,Math.min(max,L===1?12:max));b=rand(1,Math.min(max,L===1?12:max));if(a===b)b=b===max?b-1:b+1;answer=Math.max(a,b);prompt='Qual número é maior?';visual=`<span class="num-box">${a}</span> <span style="font-size:18px">OU</span> <span class="num-box">${b}</span>`;explain=`${answer} é maior porque representa uma quantidade maior.`;options=shuffle([...new Set([String(a),String(b),String(Math.min(a,b)-1<0?max:Math.min(a,b)-1),String(answer+1)])]);
  }else if(kind==='sequence'||kind==='skip'){
    const step=kind==='skip'?max:(L===1?1:pick([1,2,5,10]));a=rand(1,Math.max(2,Math.floor((kind==='skip'?100:max)/step)-5))*step;answer=a+3*step;prompt='Qual número completa a sequência?';visual=[a,a+step,a+2*step,'❔',a+4*step].map(x=>`<span class="num-box">${x}</span>`).join('');explain=`A regra é somar ${step} a cada número: ${a+2*step} + ${step} = ${answer}.`;options=close(answer);
  }else if(kind==='add'||kind==='sub'||kind==='story'){
    let bound=Math.max(5,Math.min(max,L===1?Math.min(max,10):L===2?Math.min(max,30):max));a=rand(1,bound-1);b=rand(1,bound-1);
-   if(kind==='story'){if(a+b>bound)b=Math.max(1,bound-a);answer=a+b;let ico=pick(['🍎','🚙','🧸','🍬']);prompt=`Você tinha ${a} ${ico} e ganhou mais ${b}. Quantos tem agora?`;visual=`<span class="num-box">${a}</span> + <span class="num-box">${b}</span> = ❔`;explain=`Juntando os dois grupos: ${a} + ${b} = ${answer}.`}
+   if(kind==='story'){if(a+b>bound)b=Math.max(1,bound-a);answer=a+b;const [one,many,feminine]=pick([['maçã','maçãs',true],['carrinho','carrinhos',false],['urso de pelúcia','ursos de pelúcia',false],['bala','balas',true]]);prompt=`Você tinha ${a} ${a===1?one:many} e ganhou mais ${b}. Quant${feminine?'as':'os'} tem agora?`;visual=`<span class="num-box">${a}</span> + <span class="num-box">${b}</span> = ❔`;explain=`Juntando os dois grupos: ${a} + ${b} = ${answer}.`}
    else if(kind==='add'){if(a+b>bound)b=Math.max(1,bound-a);answer=a+b;prompt=`Quanto é ${a} + ${b}?`;visual=`<span class="num-box">${a}</span> + <span class="num-box">${b}</span> = ❔`;explain=`Comece no ${a} e conte mais ${b} passos. Você chega ao ${answer}.`}
    else{if(b>a)[a,b]=[b,a];answer=a-b;prompt=`Quanto é ${a} − ${b}?`;visual=`<span class="num-box">${a}</span> − <span class="num-box">${b}</span> = ❔`;explain=`Tirando ${b} de ${a}, restam ${answer}.`}
    options=close(answer);

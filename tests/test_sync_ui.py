@@ -2,14 +2,16 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 import json
 import re
+import sys
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+from test_unificado import SCRIPTS, launch_chromium, go_world, start_mission
 
 root=Path(__file__).resolve().parents[1]
 html=(root/'index.html').read_text()
-for entry in ('curriculo.js','app.js','sync-ui.js'):
+for entry in (*SCRIPTS,'sync-ui.js'):
     html=html.replace(f'<script type="module" src="./{entry}"></script>','')
-html=html.replace('<link rel="stylesheet" href="./style.css">','<style>'+(root/'style.css').read_text()+'</style>')
-curriculum=(root/'curriculo.js').read_text()
-app=(root/'app.js').read_text()
+html=html.replace('<link rel="stylesheet" href="./style.css">','<style>'+(root/'style.css').read_text()+(root/'infantil.css').read_text()+'</style>')
+html=html.replace('<link rel="stylesheet" href="./infantil.css">','')
 ids=json.loads((root/'api/catalogo.js').read_text().split('Object.freeze(')[1].split(');')[0])
 core=(root/'sync-core.js').read_text().replace("import { IDS_MISSOES } from './api/catalogo.js';",f"const IDS_MISSOES={json.dumps(ids)};")
 core=core.replace('export const ','const ').replace('export function ','function ')
@@ -45,8 +47,8 @@ def page_for(browser,cloud,viewport,remembered=None):
       }
     }""", {'cloud':cloud,'profiles':profiles,'remembered':remembered})
     errors=[];page.on('pageerror',lambda err:errors.append(str(err)))
-    page.add_script_tag(content=curriculum)
-    page.add_script_tag(content=app)
+    for path in SCRIPTS:
+        page.add_script_tag(content=(root/path).read_text())
     page.add_script_tag(content=core+'\n'+ui)
     selector=page.get_by_role('button',name='Continuar como Foguete') if remembered else page.locator('#sync-profile')
     selector.wait_for(timeout=8000)
@@ -54,7 +56,7 @@ def page_for(browser,cloud,viewport,remembered=None):
     return page,errors
 
 with sync_playwright() as pl:
-    browser=pl.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+    browser=launch_chromium(pl)
     page,errors=page_for(browser,{}, {'width':390,'height':844})
     page.locator('#sync-profile').select_option(profiles[0]['id'])
     page.get_by_role('button',name='Usar perfil').click()
@@ -71,7 +73,17 @@ with sync_playwright() as pl:
     page.get_by_role('heading',name='Missão concluída!').wait_for()
     page.get_by_text('+3 estrelas novas',exact=True).wait_for()
     page.get_by_role('button',name='Voltar ao início',exact=True).wait_for()
+    go_world(page,'words')
+    start_mission(page,'pal-frase')
+    for word in ('O','sapo','pula.'):
+        page.locator('[data-game="select"][data-value="%s"]'%word).first.click()
+    page.locator('[data-game="check"]').click()
+    page.locator('[data-next]').click()
+    page.get_by_text('Sincronizado com segurança.').wait_for()
+    page.get_by_role('heading',name='Missão concluída!').wait_for()
     cloud=page.evaluate('window.mockCloud')
+    assert cloud[profiles[0]['id']]['estado']['missions']['pal-frase']['stars']==3
+    assert any(record['world']=='words' for record in cloud[profiles[0]['id']]['estado']['records'])
     assert cloud[profiles[0]['id']]['estado']['missions']['m-contar']['stars']>=1
     assert page.evaluate('document.documentElement.scrollWidth<=window.innerWidth+2')
     assert not errors,errors
@@ -81,6 +93,7 @@ with sync_playwright() as pl:
     second.get_by_role('button',name='Continuar como Foguete').click()
     second.get_by_text('Progresso de Foguete').wait_for()
     assert second.evaluate("window.MissaoAprenderTest.getData().missions['m-contar'].stars")>=1
+    assert second.evaluate("window.MissaoAprenderTest.getData().missions['pal-frase'].stars")==3
     print('PASS B: novo navegador recuperou progresso do mesmo perfil')
     second.get_by_role('button',name='Trocar perfil').click()
     second.locator('#sync-profile').select_option(profiles[1]['id'])

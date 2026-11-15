@@ -1,5 +1,8 @@
 from playwright.sync_api import sync_playwright
 from pathlib import Path
+import sys
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+from test_unificado import launch_chromium
 p=Path(__file__).resolve().parents[1]
 h=(p/'conta.html').read_text()
 h=h.replace('<link rel="stylesheet" href="./style.css">','').replace('<link rel="stylesheet" href="./conta.css">','').replace('<script type="module" src="./conta.js"></script>','')
@@ -14,7 +17,7 @@ if(opts.method==='POST'){window.mockProfiles.push({id:'22222222-2222-4222-8222-2
 if(opts.method==='PATCH'){Object.assign(window.mockProfiles.find(x=>x.id===body.id),body);return{ok:true,json:async()=>({})};}
 return{ok:true,json:async()=>({perfis:window.mockProfiles})};};'''
 with sync_playwright() as pl:
- browser=pl.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+ browser=launch_chromium(pl)
  for sz in [(1280,900),(390,844)]:
   page=browser.new_page(viewport={'width':sz[0],'height':sz[1]})
   errs=[];page.on('pageerror',lambda err:errs.append(str(err)))

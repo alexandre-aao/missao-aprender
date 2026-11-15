@@ -958,17 +958,27 @@ const SCIENCE_INVESTIGATIONS=[
     ]
   }
 ].map(x=>({...x,world:'science',type:'investigation',questions:1}));
+const expansion=window.MissaoMundos;
+const interactive=expansion?.activity;
 const MISSIONS=[...BASE_MISSIONS,...SKILLS.map(s=>({
  id:s.id,world:s.grade==='P'?'review':'math',grade:s.grade,
  title:s.title,desc:s.desc,icon:unitIcons[s.unit]||'📚',
  type:'curriculum',questions:8,unit:s.unit,skill:s,bncc:s.bncc
-})),...SCIENCE_DISCOVERIES,...SCIENCE_INVESTIGATIONS].map(m=>m.world==='science'?{...m,topic:m.topic||SCIENCE_TOPIC_BY_ID[m.id]||'materiais'}:m);
+})),...SCIENCE_DISCOVERIES,...SCIENCE_INVESTIGATIONS,...(expansion?.missions||[])].map(m=>m.world==='science'?{...m,topic:m.topic||SCIENCE_TOPIC_BY_ID[m.id]||'materiais'}:m);
 const WORLDS={
  math:{name:'Matemática',subtitle:'Sua trilha principal do 1º ano',icon:'🔢',css:'math',label:'PRINCIPAL',detail:'Conte, junte e compare. Aprender matemática pode ser uma aventura.'},
  review:{name:'Revisão da pré-escola',subtitle:'Conte, compare e reconheça formas',icon:'🧸',css:'review',label:'AQUECIMENTO',detail:'Revisite os primeiros desafios e fortaleça suas habilidades, sem trocar o ano escolar.'},
  science:{name:'Ciências',subtitle:'Laboratório de descobertas',icon:'🔬',css:'science',label:'EXPLORAR',detail:'Experiências interativas para observar e fazer descobertas.'}
 };
-const ICONS=['🍎','⭐','🐠','🍓','🍪','🚗','🦋'];
+for(const [key,world] of Object.entries(expansion?.worlds||{})){
+ WORLDS[key]={...world,css:key,detail:world.subtitle};
+}
+const WORLD_ORDER=['review','math','science',...Object.keys(expansion?.worlds||{})];
+const ICONS=[
+ ['🍎','maçã','maçãs'],['⭐','estrela','estrelas'],['🐠','peixe','peixes'],
+ ['🍓','morango','morangos'],['🍪','biscoito','biscoitos'],['🚗','carrinho','carrinhos'],
+ ['🦋','borboleta','borboletas']
+];
 const $=id=>document.getElementById(id);
 const random=(lo,hi)=>Math.floor(Math.random()*(hi-lo+1))+lo;
 const pick=a=>a[random(0,a.length-1)];
@@ -1001,7 +1011,7 @@ let data=load();let storageScope=STORAGE_KEY;let view='home';let session=null;le
 function save(){try{localStorage.setItem(storageScope,JSON.stringify(data));return true}catch(e){return false}}
 function getMission(id){return MISSIONS.find(m=>m.id===id)}
 function worldMissions(world){return MISSIONS.filter(m=>m.world===world&&(world!=='math'||(m.grade?m.grade===data.grade:data.grade==='1')))}
-function currentMissions(){return [...worldMissions('math'),...worldMissions('review'),...worldMissions('science')]}
+function currentMissions(){return ['math','review','science',...WORLD_ORDER.slice(3)].flatMap(worldMissions)}
 function missionDone(m){return !!data.missions[m.id] || (m.type==='curriculum'&&!!data.skills[m.id]?.mastered)}
 function skillInfo(id){return data.skills[id]||{tries:0,correct:0,streak:0,mastered:false}}
 function skillLevel(id){const p=skillInfo(id),accuracy=p.tries?p.correct/p.tries:0;return p.correct>=10&&accuracy>=.8?3:p.correct>=4&&accuracy>=.7?2:1}
@@ -1010,38 +1020,56 @@ function completed(world){return worldMissions(world).filter(m=>missionDone(m)).
 function totalStars(){return Object.values(data.missions).reduce((sum,x)=>sum+(Number(x.stars)||0),0)}
 function numSolved(){return data.records.length}
 function firstTryPercent(){return numSolved()?Math.round(data.records.filter(x=>x.firstTry).length/numSolved()*100):0}
-function lastProgress(){return currentMissions().find(m=>!missionDone(m))||worldMissions('math')[0]||MISSIONS[0]}
-function worldCard(key,featured=false){
+function latestCompletions(){
+ const lastRecord=new Map(data.records.map((record,index)=>[record.id,index]));
+ return currentMissions().filter(m=>data.missions[m.id]?.completedAt)
+  .sort((a,b)=>data.missions[b.id].completedAt.localeCompare(data.missions[a.id].completedAt)
+   ||(lastRecord.get(b.id)??-1)-(lastRecord.get(a.id)??-1));
+}
+function markResume(id,step=0,firstTry=0){
+ try{localStorage.setItem(storageScope+'::retomar',JSON.stringify({id,step,firstTry,at:new Date().toISOString()}))}catch{}
+}
+function lastProgress(){
+ const available=currentMissions(), marker=readStored(storageScope+'::retomar');
+ const active=available.find(m=>m.id===marker?.id);
+ if(active&&!(data.missions[active.id]?.completedAt>=marker.at))return active;
+ const latest=latestCompletions()[0];
+ return (latest&&worldMissions(latest.world).find(m=>!missionDone(m)))||available.find(m=>!missionDone(m))||available[0];
+}
+
+function worldCard(key,featured=false,recommended=null){
  const w=WORLDS[key],done=completed(key),all=worldMissions(key).length;
  return `<button type="button" class="world ${w.css}${featured?' home-review':''}" data-nav="${key}" aria-label="Abrir ${escapeHtml(w.name)}">
- ${featured?'':`<span class="tag">${w.label}</span>`}<span class="world-icon" aria-hidden="true">${w.icon}</span>
- <strong>${w.name}</strong><p>${key==='math'?`Descubra os números do ${data.grade}º ano`:w.subtitle}</p>
+ ${featured||!w.label?'':`<span class="tag">${w.label}</span>`}<span class="world-icon" aria-hidden="true">${w.icon}</span>
+ <strong>${w.name}</strong><p>${key==='math'?`Descubra os números do ${data.grade}º ano`:recommended?`Sugestão: ${escapeHtml(recommended.title)}`:w.subtitle}</p>
  <span class="world-link">${done} de ${all} missões · ${featured?'Abrir revisão':'Explorar'} <span aria-hidden="true">→</span></span></button>`;
 }
 function homeView(){
  const next=lastProgress(),all=currentMissions(),done=all.filter(missionDone).length,pct=Math.round(done/Math.max(1,all.length)*100);
- return `${worldCard('review',true)}
+ const recent=latestCompletions().slice(0,3);
+ const started=done||numSolved()||readStored(storageScope+'::retomar');
+ const review=worldMissions('review').find(m=>!missionDone(m));
+ return `${worldCard('review',true,review)}
  <section class="hero hero-kids" aria-label="Boas-vindas">
  <div class="hero-content"><span class="eyebrow">OI, EXPLORADOR! ✨</span>
  <h1>Uma aventura<br>espera por você!</h1>
  <p>Pronto para brincar, pensar e descobrir algo novo?</p>
- <button type="button" class="btn btn-light hero-cta" data-start="${next.id}">🚀 ${missionDone(next)?'Jogar novamente':done||numSolved()?'Continuar aventura':'Começar: '+escapeHtml(next.title)}</button>
- ${done||numSolved()?`<span class="next-hint">Próxima: ${escapeHtml(next.title)}</span>`:''}</div>
+ <button type="button" class="btn btn-light hero-cta" data-start="${next.id}" data-resume="1">🚀 ${missionDone(next)?'Jogar novamente':started?'Continuar aventura':'Começar: '+escapeHtml(next.title)}</button>
+ ${started?`<span class="next-hint">Próxima: ${escapeHtml(next.title)}</span>`:''}</div>
  <span class="hero-mascot" aria-hidden="true">🧑‍🚀</span><span class="hero-planet" aria-hidden="true">🪐</span></section>
- <div class="section-heading" id="mundos"><h2>Outras trilhas</h2></div>
- <div class="world-grid home-worlds">${worldCard('math')}${worldCard('science')}</div>
+ <div class="section-heading" id="mundos"><h2>Explore os mundos</h2><button type="button" class="btn btn-ghost" data-nav="adventures">Ver todos</button></div>
+ <div class="world-grid home-worlds">${worldCard('math')}${worldCard('science')}${expansion?worldCard('words'):''}${expansion?worldCard('logic'):''}</div>
  <section class="home-progress" aria-label="Seu progresso"><span class="home-progress-icon" aria-hidden="true">🌟</span>
  <div class="home-progress-copy"><strong>Olha só quanto você já explorou!</strong>
  <div class="meter" role="progressbar" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${all.length}" aria-label="Missões concluídas"><span style="width:${pct}%"></span></div>
  <small>${done} de ${all.length} missões concluídas · No seu ritmo</small></div></section>
- <div class="tip-banner"><span class="tip-icon" aria-hidden="true">💡</span><div><strong>Uma descoberta de cada vez</strong>
- <p>Você pode tentar de novo quantas vezes quiser. O importante é aprender se divertindo!</p></div></div>`;
+ ${recent.length?`<section class="exp-recent"><h2>Conquistas recentes</h2><ul>${recent.map(m=>`<li><span aria-hidden="true">${m.icon}</span> <strong>${escapeHtml(m.title)}</strong> · ${data.missions[m.id].stars} ${data.missions[m.id].stars===1?'estrela':'estrelas'}</li>`).join('')}</ul><button type="button" class="btn btn-ghost" data-nav="awards">Ver conquistas</button></section>`:''}`;
 }
 function adventuresView(){
  return `<div class="page-intro"><div><span class="eyebrow">SEU MAPA DE DESCOBERTAS</span>
  <h1>Para onde vamos? 🗺️</h1><p>Escolha um mundo para começar. Todas as aventuras podem ser revisitadas!</p></div>
  <span class="page-art" aria-hidden="true">🌈</span></div>
- <div class="world-grid adventures-grid">${worldCard('review')}${worldCard('math')}${worldCard('science')}</div>
+ <div class="world-grid adventures-grid">${WORLD_ORDER.map(key=>worldCard(key)).join('')}</div>
  <div class="tip-banner"><span class="tip-icon" aria-hidden="true">🚀</span><div><strong>Seu ritmo, sua aventura</strong>
  <p>Escolha uma missão, ou volte àquela que você mais gostou.</p></div></div>`;
 }
@@ -1056,7 +1084,7 @@ function missionCard(m){
 }
 function worldView(world){
  const w=WORLDS[world],all=worldMissions(world),done=completed(world);
- const filters=world==='science'?[]:[['all','Todos os assuntos'],...Object.entries(UNITS).map(([k,v])=>[k,`${v.emoji} ${v.label}`])];
+ const filters=['math','review'].includes(world)?[['all','Todos os assuntos'],...Object.entries(UNITS).map(([k,v])=>[k,`${v.emoji} ${v.label}`])]:[];
  const ms=all.filter(m=>unitFilter==='all'||m.unit===unitFilter);
  const upcoming=all.find(m=>!missionDone(m))||all[0];
  const groups=new Map();
@@ -1067,7 +1095,7 @@ function worldView(world){
  const sections=ordered.map((g,i)=>`<details class="mission-section" ${unitFilter!=='all'||i===0?'open':''}>
  <summary><span>${g.label}</span><span class="section-counter">${g.items.length} ${g.items.length===1?'missão':'missões'} <span aria-hidden="true">⌄</span></span></summary>
  <div class="mission-grid">${g.items.map(missionCard).join('')}</div></details>`).join('');
- return `<div class="page-intro"><div><span class="eyebrow">${w.label} · ${world==='math'?data.grade+'º ANO':world==='review'?'AQUECIMENTO':'EXPERIÊNCIAS'}</span>
+ return `<div class="page-intro"><div><span class="eyebrow">${world==='math'?data.grade+'º ANO':world==='review'?'PRÉ-ESCOLA':world==='science'?'EXPERIÊNCIAS':'MISSÕES'}</span>
  <h1>${w.name}</h1><p>${world==='math'?'Escolha um assunto e descubra o que você já sabe!':w.detail}</p></div>
  <span class="page-art" aria-hidden="true">${w.icon}</span></div>
  <div class="progress-summary"><strong>${done} de ${all.length} missões</strong>
@@ -1082,17 +1110,17 @@ function worldView(world){
  ${world==='science'?'<div class="tip-banner"><span class="tip-icon">🧪</span><div><strong>Olhe, teste e descubra!</strong><p>As experiências são ilustrações para aprender. Converse sobre elas com um adulto.</p></div></div>':''}`;
 }
 function choices(answer,limit){const s=new Set([Number(answer)]);for(let off of shuffle([-3,-2,-1,1,2,3,4,-4,5])){if(s.size===3)break;let n=Number(answer)+off;if(n>=0&&n<=limit)s.add(n)}for(let i=0;s.size<3&&i<=limit;i++)s.add(i);return shuffle([...s].slice(0,3).map(String))}
-function makeQuestion(m){const icon=pick(ICONS);let n=0,a=0,b=0,text='',hint='',answer='',parts=[],answers=[];
+function makeQuestion(m){const [icon,singular,plural]=pick(ICONS);const howMany=['peixes','morangos','biscoitos','carrinhos'].includes(plural)?'Quantos':'Quantas';let n=0,a=0,b=0,text='',hint='',answer='',parts=[],answers=[];
  if(m.type==='count'||m.type==='preschool'){
-   n=random(1,m.type==='preschool'?5:10);text='Quantos desenhos você vê?';hint=`Conte com calma: há ${n} ${n===1?'desenho':'desenhos'} ao todo.`;answer=String(n);parts=[{icon,n}];answers=choices(n,m.type==='preschool'?8:13);
+   n=random(1,m.type==='preschool'?5:10);text=`${howMany} ${plural} você vê?`;hint=`Há ${n} ${n===1?singular:plural} ao todo.`;answer=String(n);parts=[{icon,n}];answers=choices(n,m.type==='preschool'?8:13);
  }else if(m.type==='sum'){
-   a=random(1,5);b=random(1,10-a);n=a+b;text='Se juntarmos os dois grupos, quantos desenhos teremos?';hint=`Primeiro conte ${a}. Depois conte mais ${b}. No total são ${n}.`;answer=String(n);parts=[{icon,n:a},{icon,n:b}];answers=choices(n,13);
+   a=random(1,5);b=random(1,10-a);n=a+b;text=`Junte os dois grupos. ${howMany} ${plural} teremos?`;hint=`Primeiro conte ${a}. Depois conte mais ${b}. No total são ${n}.`;answer=String(n);parts=[{icon,n:a},{icon,n:b}];answers=choices(n,13);
  }else if(m.type==='compare'){
-   a=random(1,9);b=random(1,9);if(a===b)b=a===9?10:a+1;text='Qual grupo tem mais desenhos?';answer=a>b?'A':'B';hint=`O grupo A tem ${a} e o B tem ${b}. ${a>b?'A tem mais!':'B tem mais!'}`;parts=[{icon,n:a},{icon,n:b}];answers=['A','B'];
+   a=random(1,9);b=random(1,9);if(a===b)b=a===9?10:a+1;text=`Qual grupo tem mais ${plural}?`;answer=a>b?'A':'B';hint=`O grupo A tem ${a} e o B tem ${b}. ${a>b?'A tem mais!':'B tem mais!'}`;parts=[{icon,n:a},{icon,n:b}];answers=['A','B'];
  }
- return{text,hint,answer,parts,answers,icon};
+ return{text,hint,answer,parts,answers,icon,singular};
 }
-function objectTokens(group,n){return `<div class="object-list">${Array.from({length:n},(_,i)=>`<button type="button" class="object-token ${session.marked.has(`${group}-${i}`)?'marked':''}" data-object="${group}-${i}" aria-label="Marcar desenho ${i+1}" aria-pressed="${session.marked.has(`${group}-${i}`)}">${session.question.parts[group].icon}</button>`).join('')}</div>`}
+function objectTokens(group,n){return `<div class="object-list">${Array.from({length:n},(_,i)=>`<button type="button" class="object-token ${session.marked.has(`${group}-${i}`)?'marked':''}" data-object="${group}-${i}" aria-label="Marcar ${session.question.singular} ${i+1}" aria-pressed="${session.marked.has(`${group}-${i}`)}">${session.question.parts[group].icon}</button>`).join('')}</div>`}
 function questionBoard(m,q){if(m.type==='compare')return `<div class="object-board compare-board"><div class="compare-box"><strong>GRUPO A</strong>${objectTokens(0,q.parts[0].n)}</div><div class="compare-box"><strong>GRUPO B</strong>${objectTokens(1,q.parts[1].n)}</div></div>`;
  if(m.type==='sum')return `<div class="object-board math-display">${objectTokens(0,q.parts[0].n)}<span class="math-sign">+</span>${objectTokens(1,q.parts[1].n)}<span class="math-sign">= ?</span></div>`;
  return `<div class="object-board">${objectTokens(0,q.parts[0].n)}</div>`;
@@ -1151,7 +1179,7 @@ function activityView(){
  return `<div class="activity-shell"><button type="button" class="breadcrumbs" data-nav="${m.world}">← Voltar às aventuras</button>
  <div class="activity-meta"><span>${m.icon} ${escapeHtml(m.title)}</span><small>${m.world==='science'?'Hora de descobrir!':`Passo ${session.step+1} de ${steps}`}</small></div>
  <div class="activity-bar" role="progressbar" aria-label="Progresso da missão" aria-valuemin="0" aria-valuemax="${steps}" aria-valuenow="${session.step}"><span style="width:${progress}%"></span></div>
- <section class="activity-card">${m.world==='science'?(m.type==='gravity'?gravityBoard():m.type==='daynight'?dayNightBoard():m.type==='investigation'?investigationBoard():discoveryBoard()):m.type==='curriculum'?curriculumActivity():mathActivity()}</section>
+ <section class="activity-card">${m.type==='interactive'?interactive.render(m.rounds[session.step],session.game,session.resolved):m.world==='science'?(m.type==='gravity'?gravityBoard():m.type==='daynight'?dayNightBoard():m.type==='investigation'?investigationBoard():discoveryBoard()):m.type==='curriculum'?curriculumActivity():mathActivity()}${m.type==='interactive'?feedbackHtml():''}</section>
  <p class="activity-footnote">💜 Você pode tentar de novo. Aprender é uma aventura!</p></div>`;
 }
 function nextMissionFrom(m){const options=worldMissions(m.world);const index=options.findIndex(item=>item.id===m.id);return index>=0?options[index+1]||null:null}
@@ -1162,7 +1190,8 @@ function badges(){const done=MISSIONS.filter(m=>missionDone(m)),completions=done
  {icon:'🧸',title:'Revisão poderosa',desc:'Concluir uma missão da pré-escola',ok:completed('review')>0},
  {icon:'🧪',title:'Cientista curioso',desc:'Concluir uma missão de Ciências',ok:completed('science')>0},
  {icon:'🚀',title:'Explorador dedicado',desc:'Concluir dez missões diferentes',ok:completions>=10},
- {icon:'💫',title:'Colecionador',desc:'Conquistar pelo menos 12 estrelas',ok:totalStars()>=12}
+ {icon:'💫',title:'Colecionador',desc:'Conquistar pelo menos 12 estrelas',ok:totalStars()>=12},
+ ...WORLD_ORDER.slice(3).map(key=>({icon:WORLDS[key].icon,title:WORLDS[key].medal,desc:'Concluir uma missão em '+WORLDS[key].name,ok:completed(key)>0}))
 ]}
 function awardsView(){
  const items=badges(),count=items.filter(b=>b.ok).length;
@@ -1188,10 +1217,25 @@ function parentView(){
  <section class="parent-section"><h3>Conta e segurança</h3><p class="muted">O responsável pode gerenciar apelidos, avatares e perfis infantis em uma área privada.</p><a class="btn btn-outline" href="./conta.html">👪 Gerenciar conta e perfis →</a></section><section class="parent-section"><h3>Configurações e privacidade</h3><p class="muted">O 1º ano é a etapa inicial; os anos seguintes estão disponíveis para uso futuro. Revisões da pré-escola não alteram o ano escolhido. O progresso fica no dispositivo e pode ser sincronizado com segurança quando um responsável ativa um perfil.</p><label class="grade-setting">Ano escolar principal <select id="settings-grade">${YEARS.filter(y=>y.id!=='P').map(y=>`<option value="${y.id}" ${y.id===data.grade?'selected':''}>${escapeHtml(y.name)}</option>`).join('')}</select></label>
  <div class="settings-box"><button type="button" class="btn btn-ghost" data-export="1">⬇ Exportar progresso (.json)</button><button type="button" class="btn btn-outline" data-reset="1">Apagar progresso desta versão</button></div><p class="privacy-note">Os protótipos anteriores não são apagados. Importação automática depende de os arquivos compartilharem o mesmo armazenamento do navegador. Faça cópia do progresso antes de limpar dados.</p></section><button type="button" class="btn btn-outline" data-nav="home">← Voltar ao início</button>`
 }
-function navTitle(){return({home:'Início',adventures:'Aventuras',math:'Matemática',review:'Revisão da pré-escola',science:'Ciências',awards:'Conquistas',activity:'Hora da missão',result:'Muito bem!',parents:'Para a família'})[view]}
-function render(){if(view==='parents'&&!parentAllowed)view='home';const main=$('main');if(!main)return;main.innerHTML=({home:homeView,adventures:adventuresView,math:()=>worldView('math'),review:()=>worldView('review'),science:()=>worldView('science'),awards:awardsView,activity:activityView,result:resultView,parents:parentView})[view]();$('section-name').textContent=navTitle();const gradePill=$('grade-pill');if(gradePill)gradePill.textContent=`🎒 ${data.grade}º ano`;$('star-indicator').textContent=`⭐ ${totalStars()}`;document.querySelectorAll('.side-nav .nav-button').forEach(b=>{const selected=['math','review','science','activity','result'].includes(view)?'adventures':view;b.classList.toggle('active',b.dataset.nav===selected);if(b.dataset.nav===selected)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});}
+function navTitle(){return WORLDS[view]?.name||({home:'Início',adventures:'Aventuras',math:'Matemática',review:'Revisão da pré-escola',science:'Ciências',awards:'Conquistas',activity:'Hora da missão',result:'Muito bem!',parents:'Para a família'})[view]}
+function render(){if(view==='parents'&&!parentAllowed)view='home';const main=$('main');if(!main)return;main.innerHTML=WORLDS[view]?worldView(view):({home:homeView,adventures:adventuresView,math:()=>worldView('math'),review:()=>worldView('review'),science:()=>worldView('science'),awards:awardsView,activity:activityView,result:resultView,parents:parentView})[view]();$('section-name').textContent=navTitle();const gradePill=$('grade-pill');if(gradePill)gradePill.textContent=`🎒 ${data.grade}º ano`;$('star-indicator').textContent=`⭐ ${totalStars()}`;document.querySelectorAll('.side-nav .nav-button').forEach(b=>{const selected=(WORLDS[view]||['activity','result'].includes(view))?'adventures':view;b.classList.toggle('active',b.dataset.nav===selected);if(b.dataset.nav===selected)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});}
 function navigate(to){clearTimeout(gravityTimeout);session=null;unitFilter='all';view=to;render();window.scrollTo({top:0,behavior:'instant'})}
-function start(id){const m=getMission(id);if(!m)return;clearTimeout(gravityTimeout);view='activity';session={mission:m,step:0,question:null,firstTry:0,errors:0,wrongCount:0,wrongOptions:new Set(),feedback:null,resolved:false,marked:new Set(),height:2,released:false,dropping:false,drops:0,angle:0,rotated:false,explored:new Set(),exploredScene:null,prediction:null};if(m.world!=='science')session.question=generateQuestion(m);render();window.scrollTo({top:0,behavior:'instant'});}
+function start(id,resume=false){
+ const m=getMission(id);
+ if(!m)return;
+ clearTimeout(gravityTimeout);
+ view='activity';
+ const marker=resume?readStored(storageScope+'::retomar'):null;
+ const restored=m.type==='interactive'&&marker?.id===id&&Number.isInteger(marker.step)&&marker.step>=0&&marker.step<m.questions;
+ const step=restored?marker.step:0;
+ const firstTry=restored&&Number.isInteger(marker.firstTry)?Math.max(0,Math.min(step,marker.firstTry)):0;
+ session={mission:m,step,question:null,firstTry,errors:0,wrongCount:0,wrongOptions:new Set(),feedback:null,resolved:false,marked:new Set(),height:2,released:false,dropping:false,drops:0,angle:0,rotated:false,explored:new Set(),exploredScene:null,prediction:null};
+ if(m.type==='interactive')session.game=interactive.create(m.rounds[step]);
+ else if(m.world!=='science')session.question=generateQuestion(m);
+ markResume(id,step,firstTry);
+ render();
+ window.scrollTo({top:0,behavior:'instant'});
+}
 function logRecord(){
  const m=session.mission,firstTry=session.wrongCount===0;
  data.records.push({id:m.id,world:m.world,firstTry,errors:session.wrongCount,date:new Date().toISOString(),eventId:typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'ev-'+Date.now().toString(36)+Math.random().toString(36).slice(2)});
@@ -1232,8 +1276,103 @@ function practiceHint(m,q){
  if(m.type==='sum')return 'Conte um grupo e siga contando os desenhos do outro grupo.';
  return 'Toque em cada desenho uma vez enquanto conta.';
 }
-function answer(value){if(view!=='activity'||!session||session.resolved)return;const m=session.mission;if((m.type==='discovery'||m.type==='investigation')&&session.explored.size<2)return;if(m.type==='investigation'&&session.prediction===null)return;const right=m.world==='science'?(m.type==='gravity'?'cai':m.type==='daynight'?'dia':m.right):session.question.answer;if(value===right){session.resolved=true;if(session.wrongCount===0)session.firstTry++;session.feedback={kind:'right',text:m.world==='science'?(m.type==='gravity'?'Muito bem! A gravidade da Terra puxa a bola para baixo.':m.type==='daynight'?'O lado da Terra voltado para o Sol recebe luz e tem dia.':m.explain) : m.type==='curriculum'?session.question.explain:session.question.hint};logRecord();}else{if(session.wrongOptions.has(value))return;session.wrongCount++;session.errors++;session.wrongOptions.add(value);session.feedback={kind:'wrong',text:practiceHint(m,session.question)};}render()}
-function next(){if(!session||!session.resolved)return;session.step++;if(session.step>=session.mission.questions){const m=session.mission;session.stars=Math.max(1,Math.min(3,Math.ceil(session.firstTry/m.questions*3)));const previousStars=data.missions[m.id]?.stars||0;session.earnedStars=Math.max(0,session.stars-previousStars);data.missions[m.id]={stars:Math.max(previousStars,session.stars),lastStars:session.stars,completedAt:new Date().toISOString()};save();window.dispatchEvent(new Event('missao-aprender:mission-complete'));view='result';render();document.querySelector('.result-card h1')?.focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}else{session.question=generateQuestion(session.mission);session.wrongCount=0;session.wrongOptions.clear();session.feedback=null;session.resolved=false;session.marked.clear();render();}}
+function answer(value){if(view!=='activity'||!session||session.resolved||session.mission.type==='interactive')return;const m=session.mission;if((m.type==='discovery'||m.type==='investigation')&&session.explored.size<2)return;if(m.type==='investigation'&&session.prediction===null)return;const right=m.world==='science'?(m.type==='gravity'?'cai':m.type==='daynight'?'dia':m.right):session.question.answer;if(value===right){session.resolved=true;if(session.wrongCount===0)session.firstTry++;session.feedback={kind:'right',text:m.world==='science'?(m.type==='gravity'?'Muito bem! A gravidade da Terra puxa a bola para baixo.':m.type==='daynight'?'O lado da Terra voltado para o Sol recebe luz e tem dia.':m.explain) : m.type==='curriculum'?session.question.explain:session.question.hint};logRecord();}else{if(session.wrongOptions.has(value))return;session.wrongCount++;session.errors++;session.wrongOptions.add(value);session.feedback={kind:'wrong',text:practiceHint(m,session.question)};}render()}
+function gameAttempt(outcome,round){
+ if(outcome==='success'){
+  session.resolved=true;
+  if(session.wrongCount===0)session.firstTry++;
+  session.feedback={kind:'right',text:round.explain};
+  logRecord();
+ }else if(outcome==='wrong'){
+  session.wrongCount=Math.min(200,session.wrongCount+1);
+  session.feedback={kind:'wrong',text:round.hint};
+ }
+}
+async function runProgram(round,current){
+ const state=current.game;
+ const result=interactive.programSteps(round,state.commands);
+ const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const commands=state.commands;
+ Object.assign(state,interactive.create(round),{commands,running:true});
+ render();
+ document.querySelector('.exp-board')?.scrollIntoView({block:'center',behavior:'instant'});
+ for(const frame of result.frames){
+  if(!reduced)await new Promise(resolve=>setTimeout(resolve,255));
+  if(session!==current||view!=='activity')return;
+  Object.assign(state,{pos:frame.pos,collected:frame.collected,frame:frame.index});
+  if(!reduced)render();
+ }
+ state.running=false;state.frame=null;
+ if(result.success)gameAttempt('success',round);
+ else{
+  state.message=result.blocked===null?'O caminho parou antes de cumprir a missão.':`Confira o bloco ${result.blocked+1}. O caminho está bloqueado ali.`;
+  gameAttempt('wrong',round);
+ }
+ render();
+ document.querySelector(result.success?'[data-next]':'[data-game="run"]')?.focus({preventScroll:true});
+}
+function playSpeech(text,lang){
+ const target=$('exp-message');
+ const fallback=()=>{if(target)target.textContent=lang==='en-US'?'Áudio indisponível aqui. Use a palavra escrita em inglês.':'Áudio indisponível aqui. Leia a instrução na tela.'};
+ const synth=window.speechSynthesis;
+ if(!synth||typeof window.SpeechSynthesisUtterance!=='function'){fallback();return}
+ const voice=synth.getVoices().find(item=>item.localService&&item.lang.toLowerCase()===lang.toLowerCase());
+ if(lang==='en-US'&&!voice){fallback();return}
+ const utterance=new window.SpeechSynthesisUtterance(text);
+ utterance.lang=lang;utterance.rate=.83;
+ if(voice)utterance.voice=voice;
+ utterance.onerror=event=>{if(!['interrupted','canceled'].includes(event.error))fallback()};
+ synth.cancel();synth.speak(utterance);
+}
+function playGame(button){
+ if(view!=='activity'||session?.mission.type!=='interactive')return;
+ const {game:name,value}=button.dataset;
+ const round=session.mission.rounds[session.step];
+ if(name==='speak'||name==='english'){
+  const text=name==='english'?round.english:[round.passage,round.speech||round.prompt].filter(Boolean).join(' ');
+  if(text)playSpeech(text,name==='english'?'en-US':'pt-BR');
+  return;
+ }
+ if(session.resolved||session.game.running)return;
+ if(name==='hint'){
+  session.game.message=round.hint;
+  const status=$('exp-message');
+  if(status)status.textContent=round.hint;
+  return;
+ }
+ const outcome=interactive.action(round,session.game,name,value);
+ if(outcome==='run'){void runProgram(round,session);return}
+ if(outcome)gameAttempt(outcome,round);
+ else if(session.feedback?.kind==='wrong')session.feedback=null;
+ render();
+ const controls=[...document.querySelectorAll('[data-game]')];
+ const match=controls.find(control=>control.dataset.game===name&&control.dataset.value===value&&!control.disabled);
+ const nextControl=document.querySelector(outcome==='success'?'[data-next]':name==='card'&&session.game.mismatch?'[data-game="hide"]':name==='source'?'[data-game="pair"]:not(:disabled)':'[data-game]:not(:disabled)');
+ (outcome==='success'?nextControl:match||nextControl)?.focus({preventScroll:true});
+}
+function next(){
+ if(!session||!session.resolved)return;
+ session.step++;
+ const m=session.mission;
+ if(session.step>=m.questions){
+  session.stars=Math.max(m.type==='interactive'?2:1,Math.min(3,Math.ceil(session.firstTry/m.questions*3)));
+  const previousStars=data.missions[m.id]?.stars||0;
+  session.earnedStars=Math.max(0,session.stars-previousStars);
+  data.missions[m.id]={stars:Math.max(previousStars,session.stars),lastStars:session.stars,completedAt:new Date().toISOString()};
+  save();window.dispatchEvent(new Event('missao-aprender:mission-complete'));
+  view='result';render();document.querySelector('.result-card h1')?.focus({preventScroll:true});
+  window.scrollTo({top:0,behavior:'instant'});
+ }else{
+  if(m.type==='interactive')session.game=interactive.create(m.rounds[session.step]);
+  else session.question=generateQuestion(m);
+  markResume(m.id,session.step,session.firstTry);
+  session.wrongCount=0;session.wrongOptions.clear();session.feedback=null;session.resolved=false;session.marked.clear();render();
+  if(m.type==='interactive'){
+   document.querySelector('.exp-game h2')?.focus({preventScroll:true});
+   window.scrollTo({top:0,behavior:'instant'});
+  }
+ }
+}
 function openGate(){previousView=view;gateAnswer=random(5,9)+random(2,5);const a=random(5,9),b=random(2,5);gateAnswer=a+b;$('gate-root').innerHTML=`<div class="gate-backdrop" role="presentation"><form class="gate-modal" id="gate-form" aria-label="Acessar espaço dos responsáveis"><h2>👨‍👩‍👧 Espaço da família</h2><p>Uma continha rápida para evitar que esta área seja aberta sem querer.</p><label for="parent-gate-input"><strong>Quanto é ${a} + ${b}?</strong></label><input type="number" id="parent-gate-input" autocomplete="off" required inputmode="numeric"><div id="gate-error" class="gate-error" role="status"></div><div class="gate-actions"><button type="button" class="btn btn-outline" data-gate-close="1">Cancelar</button><button class="btn btn-primary" type="submit">Entrar</button></div></form></div>`;$('parent-gate-input').focus()}
 function closeGate(){$('gate-root').innerHTML=''}
 function enterParents(){if(parentAllowed){navigate('parents');return}openGate()}
@@ -1247,7 +1386,8 @@ document.addEventListener('click',e=>{const btn=e.target.closest('button');if(!b
  if(btn.dataset.gateClose){closeGate();return}
  if(btn.dataset.nav){navigate(btn.dataset.nav);return}
  if(btn.dataset.unit){unitFilter=btn.dataset.unit;render();return}
- if(btn.dataset.start){start(btn.dataset.start);return}
+ if(btn.dataset.start){start(btn.dataset.start,btn.dataset.resume==='1');return}
+ if(btn.dataset.game){playGame(btn);return}
  if(btn.dataset.answer!==undefined){answer(btn.dataset.answer);return}
  if(btn.dataset.scienceAnswer!==undefined){answer(btn.dataset.scienceAnswer);return}
  if(btn.dataset.predict!==undefined&&view==='activity'&&session?.mission.type==='investigation'){const index=Number(btn.dataset.predict);if(session.explored.size===0&&Number.isInteger(index)&&index>=0&&index<session.mission.predictions.length){session.prediction=index;render()}return}
@@ -1258,7 +1398,7 @@ document.addEventListener('click',e=>{const btn=e.target.closest('button');if(!b
  if(btn.dataset.drop){dropBall();return}
  if(btn.dataset.halfturn){halfTurn();return}
  if(btn.dataset.export){downloadProgress();return}
- if(btn.dataset.reset){if(storageScope!==STORAGE_KEY){alert('Para proteger resultados sincronizados, o apagamento na nuvem ainda não está disponível. Troque para o modo local.');return}if(confirm('Apagar o progresso local deste navegador?')){data=fresh();save();render()}return}
+ if(btn.dataset.reset){if(storageScope!==STORAGE_KEY){alert('Para proteger resultados sincronizados, o apagamento na nuvem ainda não está disponível. Troque para o modo local.');return}if(confirm('Apagar o progresso local deste navegador?')){data=fresh();try{localStorage.removeItem(storageScope+'::retomar')}catch{}save();render()}return}
 });
 document.addEventListener('input',e=>{if(!session)return;if(e.target.id==='height'&&session.mission.type==='gravity'){
   session.height=Number(e.target.value);session.released=false;const b=document.querySelector('.gravity-ball');if(b){b.classList.remove('ground');b.style.setProperty('--ball-bottom',({1:77,2:126,3:168})[session.height]+'px')}const label=$('height-label');if(label)label.textContent=['','Baixa','Média','Alta'][session.height];

@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   testes-e-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -22,3 +22,16 @@ jobs:
         run: python -m py_compile test_unificado.py tests/test_novas_missoes.py
       - name: Build Vite
         run: npm run build
+      - name: Instalar navegador para testes
+        run: |
+          python -m pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium --only-shell
+      - name: Testar celular, desktop e sincronização
+        env:
+          MISSAO_EVIDENCIAS: /tmp/missao-evidencias
+        run: |
+          python test_unificado.py
+          python tests/test_novas_missoes.py
+          python tests/test_admin_ui.py
+          python tests/test_sync_ui.py
+          python tests/test_cinco_mundos.py

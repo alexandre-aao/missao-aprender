@@ -2,13 +2,13 @@ from playwright.sync_api import sync_playwright
 from pathlib import Path
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent))
-from test_unificado import document,go_world,start_mission
+from test_unificado import document,go_world,start_mission,launch_chromium
 
 SC = ['c-plantas','c-flutua','c-ima','c-sombras','c-som','c-agua','c-sol','c-borboleta']
 MAT = ['a-m01','a-m02','a-m03','a-m04','a-m05','a-m06','a-m07','a-m08','a-m09','a-m10','a-m11']
 REV = ['a-p01','a-p02','a-p03']
 with sync_playwright() as p:
-    b=p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+    b=launch_chromium(p)
     page=b.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True)
     errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
@@ -17,7 +17,7 @@ with sync_playwright() as p:
        let v=window.MissaoAprenderTest;
        return {all:v.MISSIONS.length,math:v.worldMissions('math').length,review:v.worldMissions('review').length,science:v.worldMissions('science').length};
     }""")
-    assert state == {'all':96,'math':30,'review':10,'science':20},state
+    assert state == {'all':140,'math':30,'review':10,'science':20},state
     go_world(page,'science')
     assert page.locator('.mission-card').count()==20
     for mid in SC:
