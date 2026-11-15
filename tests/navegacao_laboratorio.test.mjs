@@ -17,7 +17,9 @@ const result=new Function('session','nextMissionFrom','escapeHtml',functionSourc
 
 test('laboratório exige duas experiências antes da resposta',()=>{
  assert.match(source,/session\.explored\.size<2/);
- assert.match(source,/Etapa \$\{session\.explored\.size\+1\} de 2/);
+ assert.match(source,/function scienceScene\\(/);
+ assert.match(source,/inquiry-comparison-prompt/);
+ assert.match(source,/data-predict/);
 });
 test('próxima missão permanece na mesma trilha',()=>{
  assert.equal(next(groups.science[0]).id,'c-imanes');
