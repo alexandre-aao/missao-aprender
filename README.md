@@ -113,3 +113,7 @@ Suspender um responsável bloqueia as APIs familiares do Missão Aprender, mas n
 ## Fase 2 — Gestão Pedagógica (homologação)
 
 Abas Pedagogia/Catálogo na Central de Administração. Métricas agregadas dos perfis sincronizados, por mundo e missão, exportação CSV, ocultação editorial (sem remoção de conteúdo) e sinalização de revisão com auditoria. **Não usar os registros dos dispositivos como notas ou rankings verificados**. Ver [documentação](docs/admin-pedagogia-fase2.md). Migration antes de deploy: `database/2026-11-16_admin_fase2.sql`.
+
+## Fase 3 — Administração Avançada (em homologação)
+
+Novas abas Operação, Solicitações e Segurança: modo normal/somente leitura/manutenção com aviso público; recebimento e acompanhamento de pedidos de suporte/privacidade, resposta auditada, exportação **individual** de progresso sincronizado e diagnóstico pontual do banco com auditoria consolidada. Consulte `docs/admin-avancado-fase3.md`. Antes de eventual deploy, aplicar `database/2026-11-16_admin_fase3.sql` no Neon de produção. O modo inicial é **normal**. O botão de manutenção não cancela sessões de Neon Auth, nem impede o acesso a jogos já carregados/offline.

@@ -92,6 +92,27 @@
           <div class="account-head"><div><span class="account-kicker">RESPONSÁVEL AUTENTICADO</span><h2>Perfis das crianças</h2><p class="account-help" id="usuario-logado"></p></div><button id="sair" class="account-outline" type="button">Sair</button></div>
           <p class="account-help">Os apelidos e avatares não são públicos. Grupos e desafios com amigos permanecem desativados.</p>
           <div class="admin-badge" id="role-info" aria-live="polite">Responsável</div>
+          <section id="painel-solicitacoes-familia" class="new-profile-box" aria-label="Suporte e privacidade">
+            <h3>✉️ Suporte e privacidade</h3>
+            <p class="account-help">Peça ajuda, uma cópia dos dados sincronizados, correção ou exclusão de informações. Não informe senhas nem dados médicos. Os pedidos são avaliados pelo Administrador Geral.</p>
+            <form id="form-solicitacao-familia" class="account-form">
+              <label>Assunto
+               <select name="tipo" required>
+                <option value="suporte">Suporte ao aplicativo</option>
+                <option value="exportacao">Solicitar cópia dos dados</option>
+                <option value="correcao">Solicitar correção de dados</option>
+                <option value="exclusao">Solicitar exclusão de dados</option>
+               </select>
+              </label>
+              <label>Explique sua solicitação
+               <textarea name="descricao" required minlength="10" maxlength="600" rows="3" placeholder="Descreva sua necessidade sem dados sensíveis"></textarea>
+              </label>
+              <button type="submit" class="btn account-primary">Enviar solicitação</button>
+            </form>
+            <p id="alerta-solicitacoes-familia" role="status" aria-live="polite" class="account-help"></p>
+            <div class="account-actions"><strong>Meus pedidos</strong><button id="recarregar-solicitacoes-familia" type="button" class="account-outline">Atualizar</button></div>
+            <div id="lista-solicitacoes-familia" aria-live="polite"></div>
+          </section>
           <section id="painel-admin" class="new-profile-box" aria-label="Administração do sistema" hidden>
             <h3>🛡️ Administração do Missão Aprender</h3>
             <p class="account-help">Indicadores gerais; sem acesso ao conteúdo privado dos perfis de outras famílias.</p>

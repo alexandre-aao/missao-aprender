@@ -73,3 +73,14 @@
 .admin-catalog-actions button{min-height:42px}
 .admin-dialog .admin-ped-form{border-top:1px solid #e3dcea;padding-top:12px;margin-top:16px}
 @media(max-width:540px){.admin-ped-worlds{grid-template-columns:1fr}.admin-ped-actions{align-items:stretch}.admin-ped-actions>button{flex:1}.admin-catalog-actions button{flex:1}}
+
+/* Fase 3: controles de manutenção, pedidos e exportações. */
+.admin-advanced-form{display:grid;gap:13px;margin:17px 0}
+.admin-advanced-form label{display:grid;gap:7px;color:#343252;font-size:13px;font-weight:800}
+.admin-advanced-form select,.admin-advanced-form textarea{
+ width:100%;max-width:100%;min-height:44px;padding:11px 13px;
+ border-radius:12px;border:1px solid #d3cde2;background:#fff;color:#292642;font:inherit;font-size:13px
+}
+.admin-advanced-form textarea{resize:vertical;line-height:1.5}
+.admin-advanced-form .admin-primary{justify-self:start}
+@media(max-width:540px){.admin-advanced-form .admin-primary{width:100%}}

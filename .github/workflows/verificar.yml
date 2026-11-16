@@ -19,7 +19,7 @@ jobs:
       - name: Testes Node
         run: npm test
       - name: Python syntax
-        run: python -m py_compile test_unificado.py tests/test_novas_missoes.py tests/test_admin_geral_ui.py tests/test_pedagogia_ui.py
+        run: python -m py_compile test_unificado.py tests/test_novas_missoes.py tests/test_admin_geral_ui.py tests/test_pedagogia_ui.py tests/test_admin_fase3_ui.py tests/test_fase3_familia_ui.py
       - name: Build Vite
         run: npm run build
       - name: Instalar navegador para testes
@@ -35,6 +35,8 @@ jobs:
           python tests/test_admin_ui.py
           python tests/test_admin_geral_ui.py
           python tests/test_pedagogia_ui.py
+          python tests/test_admin_fase3_ui.py
+          python tests/test_fase3_familia_ui.py
           python tests/test_catalogo_visibilidade.py
           python tests/test_sync_ui.py
           python tests/test_cinco_mundos.py

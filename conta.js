@@ -87,6 +87,42 @@ $('form-convite').onsubmit=async event=>{
   finally{busy(form,false);}
 };
 
+
+async function loadSolicitacoesFamilia(){
+ const root=$('lista-solicitacoes-familia');root.replaceChildren();
+ const r=await api('/api/solicitacoes');
+ if(!r.solicitacoes?.length){
+  const p=document.createElement('p');p.className='account-help';p.textContent='Nenhuma solicitação registrada.';root.append(p);return;
+ }
+ const estados={aberta:'Aberta',em_analise:'Em análise',respondida:'Respondida',concluida:'Concluída'};
+ const tipos={suporte:'Suporte',correcao:'Correção',exportacao:'Cópia de dados',exclusao:'Exclusão de dados'};
+ for(const item of r.solicitacoes){
+  const card=document.createElement('article');card.className='account-request-card';
+  const title=document.createElement('strong');title.textContent=(tipos[item.tipo]||item.tipo)+' · '+(estados[item.status]||item.status);
+  const description=document.createElement('p');description.textContent=item.descricao;
+  card.append(title,description);
+  if(item.resposta){
+   const reply=document.createElement('p');reply.className='account-request-reply';reply.textContent='Resposta do administrador: '+item.resposta;card.append(reply);
+  }
+  root.append(card);
+ }
+}
+$('form-solicitacao-familia').onsubmit=async event=>{
+ event.preventDefault();const form=event.currentTarget;busy(form,true);
+ const alert=$('alerta-solicitacoes-familia');alert.textContent='';
+ try{
+  const data=new FormData(form);
+  await api('/api/solicitacoes','POST',{tipo:String(data.get('tipo')||''),descricao:String(data.get('descricao')||'')});
+  form.reset();await loadSolicitacoesFamilia();
+  alert.textContent='Solicitação registrada. Acompanhe a resposta nesta área.';
+ }catch(e){alert.textContent=e.message||'Não foi possível enviar sua solicitação.';}
+ finally{busy(form,false);}
+};
+$('recarregar-solicitacoes-familia').onclick=async()=>{
+ try{await loadSolicitacoesFamilia();$('alerta-solicitacoes-familia').textContent='Pedidos atualizados.';}
+ catch(e){$('alerta-solicitacoes-familia').textContent=e.message;}
+};
+
 async function loadAdmin(){
   const admin=$('painel-admin');admin.hidden=true;
   try{
@@ -108,6 +144,7 @@ async function restore(fromLogin=false){
   screen('perfis');
   try{await loadProfiles();inform('');}catch(e){profiles=[];renderProfiles();inform(e.message);}
   await loadAdmin();
+  try{await loadSolicitacoesFamilia();}catch(e){$('alerta-solicitacoes-familia').textContent='Solicitações temporariamente indisponíveis: '+e.message;}
 }
 function showVerification(email){verificationEmail=email;$('verificar-email').textContent=email;$('form-verificar').reset();screen('verificar');}
 async function sendVerification(email){if(!auth?.emailOtp?.sendVerificationOtp)throw Error('Envio do código indisponível.');failed(await auth.emailOtp.sendVerificationOtp({email,type:'email-verification'}),'Não foi possível enviar o código.');}
