@@ -17,7 +17,7 @@ script=(root/'admin.js').read_text().replace(
  'const createAuthClient = () => window.mockAuth;')
 script=script.replace('import.meta.env.VITE_NEON_AUTH_URL','"https://neon.invalid/auth"')
 meta=(root/'api/_catalogo-pedagogico.js').read_text()
-metadata=json.loads(meta.split('Object.freeze(',1)[1].split('.map(',1)[0])
+metadata=json.loads(meta.split('MISSOES_PEDAGOGICAS = Object.freeze(',1)[1].split('.map(',1)[0])
 assert len(metadata)==140
 
 mock=r"""

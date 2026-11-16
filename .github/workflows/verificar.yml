@@ -35,5 +35,6 @@ jobs:
           python tests/test_admin_ui.py
           python tests/test_admin_geral_ui.py
           python tests/test_pedagogia_ui.py
+          python tests/test_catalogo_visibilidade.py
           python tests/test_sync_ui.py
           python tests/test_cinco_mundos.py
