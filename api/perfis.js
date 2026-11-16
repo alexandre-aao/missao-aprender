@@ -27,6 +27,8 @@ export default async function handler(req, res) {
   if (!usuario) return respostaJson(res, 401, { erro: 'Entre como responsavel.' });
 
   try {
+    const acesso = await sql`SELECT missao_api.acesso_familiar_permitido(${usuario}) AS permitido`;
+    if (acesso[0]?.permitido !== true) return respostaJson(res, 403, { erro: 'Acesso familiar suspenso ou indisponível. Procure o administrador.' });
     if (req.method === 'GET') {
       const rows = await sql`SELECT * FROM missao_api.listar_perfis(${usuario})`;
       return respostaJson(res, 200, { perfis: rows });

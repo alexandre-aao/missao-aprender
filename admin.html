@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta name="theme-color" content="#fcfaf4">
+ <meta name="robots" content="noindex,nofollow">
+ <meta name="description" content="Administração privada de famílias e perfis do Missão Aprender.">
+ <title>Central de Administração | Missão Aprender</title>
+ <link rel="stylesheet" href="./style.css">
+ <link rel="stylesheet" href="./conta.css">
+ <link rel="stylesheet" href="./admin.css">
+ <script type="module" src="./admin.js"></script>
+</head>
+<body class="admin-shell">
+ <div class="app-shell">
+  <aside class="sidebar">
+   <div class="brand"><div class="brand-mark">🚀</div><div><strong>missão<span>aprender</span></strong><small>Pequenas descobertas, grandes ideias</small></div></div>
+   <nav aria-label="Navegação" class="side-nav account-nav">
+    <a href="./index.html" class="nav-button"><span aria-hidden="true">🏠</span><span class="nav-label">Missões</span></a>
+    <a href="./conta.html" class="nav-button"><span aria-hidden="true">👪</span><span class="nav-label">Minha família</span></a>
+    <a href="./admin.html" aria-current="page" class="nav-button active"><span aria-hidden="true">🛡️</span><span class="nav-label">Administração</span></a>
+   </nav>
+   <div class="side-note"><span class="note-orbit">🔒</span><strong>Acesso restrito</strong><p>Somente o Administrador Geral pode consultar os registros de outras famílias.</p></div>
+  </aside>
+  <div class="app-main">
+   <header class="topbar"><div class="top-title"><small>MISSÃO APRENDER</small><strong>Central de Administração</strong></div><div class="top-right"><span class="grade-pill">🔐 Privado</span></div></header>
+   <main class="admin-main">
+    <div class="admin-heading"><div><span class="account-kicker">CENTRAL DE ADMINISTRAÇÃO</span><h1>Famílias e crianças</h1><p>Gerencie contas, vínculos familiares e perfis infantis em um só lugar.</p></div><a class="admin-back" href="./conta.html">Minha conta</a></div>
+    <div id="admin-carregando" class="admin-notice" role="status">Verificando as permissões de administração…</div>
+    <div id="admin-negado" class="admin-notice" role="alert" hidden>Acesso restrito ao Administrador Geral. <a href="./conta.html">Entrar com sua conta</a>.</div>
+    <section id="admin-app" hidden aria-label="Gerenciamento administrativo">
+     <div id="admin-feedback" role="status" aria-live="polite" class="admin-feedback" hidden></div>
+     <div class="admin-summary" aria-label="Resumo do aplicativo">
+      <div><strong id="total-familias">—</strong><span>Contas adultas</span></div>
+      <div><strong id="total-criancas">—</strong><span>Perfis infantis</span></div>
+      <div><strong>140</strong><span>Missões no catálogo</span></div>
+     </div>
+     <nav class="admin-tabs" aria-label="Módulos da administração">
+      <button id="aba-familias" type="button" class="admin-tab active" aria-pressed="true">👪 Famílias</button>
+      <button id="aba-criancas" type="button" class="admin-tab" aria-pressed="false">🚀 Crianças</button>
+      <button id="aba-auditoria" type="button" class="admin-tab" aria-pressed="false">📋 Histórico</button>
+     </nav>
+     <section id="painel-familias" aria-label="Famílias cadastradas" class="admin-module">
+      <div class="admin-section-heading"><div><h2>Contas de responsáveis</h2><p>Inclui contas que ainda não cadastraram filhos.</p></div></div>
+      <form id="form-buscar-familias" class="admin-search">
+       <label>Pesquisar responsável ou e-mail<input id="busca-familias" type="search" maxlength="80" placeholder="Nome ou e-mail"></label>
+       <label>Situação<select id="estado-familias"><option value="todos">Todas</option><option value="ativo">Ativas</option><option value="suspenso">Suspensas no aplicativo</option><option value="restrito_neon">Restritas no Neon Auth</option></select></label>
+       <button type="submit" class="admin-primary">Pesquisar</button>
+      </form>
+      <div id="lista-familias" class="admin-results" aria-live="polite"></div>
+      <div class="admin-pagination"><button id="familias-anterior" type="button">Anterior</button><span id="familias-pagina"></span><button id="familias-proxima" type="button">Próxima</button></div>
+     </section>
+     <section id="painel-criancas" aria-label="Perfis infantis" class="admin-module" hidden>
+      <div class="admin-section-heading"><div><h2>Todos os perfis infantis</h2><p>Consulte cada criança e o responsável associado, sem abrir o histórico privado das atividades.</p></div></div>
+      <form id="form-buscar-criancas" class="admin-search">
+       <label>Pesquisar apelido ou responsável<input id="busca-criancas" type="search" maxlength="80" placeholder="Apelido, nome ou e-mail"></label>
+       <label>Ano escolar<select id="ano-criancas"><option value="-1">Todos</option><option value="0">Pré-escola</option><option value="1">1º ano</option><option value="2">2º ano</option><option value="3">3º ano</option><option value="4">4º ano</option><option value="5">5º ano</option><option value="6">6º ano</option></select></label>
+       <button type="submit" class="admin-primary">Pesquisar</button>
+      </form>
+      <div id="filtro-familia-ativo" class="admin-filter-note" hidden><span id="filtro-familia-label"></span><button type="button" id="limpar-filtro-familia">Mostrar todas</button></div>
+      <div id="lista-criancas" class="admin-results" aria-live="polite"></div>
+      <div class="admin-pagination"><button id="criancas-anterior" type="button">Anterior</button><span id="criancas-pagina"></span><button id="criancas-proxima" type="button">Próxima</button></div>
+     </section>
+     <section id="painel-auditoria" aria-label="Histórico de alterações" class="admin-module" hidden>
+      <div class="admin-section-heading"><div><h2>Alterações administrativas</h2><p>Justificativas e datas de suspensão, reativação e correção de perfil. Não inclui consultas nem autenticações do Neon.</p></div></div>
+      <button id="atualizar-auditoria" class="admin-outline" type="button">Atualizar histórico</button>
+      <div id="lista-auditoria" class="admin-results" aria-live="polite"></div>
+     </section>
+     <p class="admin-footnote">Suspender bloqueia as APIs familiares e a sincronização do Missão Aprender. Não remove a conta do Neon Auth, não encerra a sessão de login e não impede o uso anônimo das missões públicas. Nenhum progresso é excluído.</p>
+    </section>
+   </main>
+  </div>
+ </div>
+ <dialog id="ficha-dialog" class="admin-dialog" aria-labelledby="ficha-titulo">
+  <div class="admin-dialog-header"><h2 id="ficha-titulo">Ficha de cadastro</h2><button type="button" id="fechar-ficha" class="admin-icon-button" aria-label="Fechar ficha">✕</button></div>
+  <div id="ficha-conteudo"></div>
+ </dialog>
+</body>
+</html>

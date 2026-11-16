@@ -6,7 +6,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         principal: resolve(import.meta.dirname, 'index.html'),
-        conta: resolve(import.meta.dirname, 'conta.html')
+        conta: resolve(import.meta.dirname, 'conta.html'),
+        administracao: resolve(import.meta.dirname, 'admin.html')
       }
     }
   }
