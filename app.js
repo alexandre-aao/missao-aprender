@@ -1478,5 +1478,5 @@ async function consultarModoOperacional(){
  }catch{/* Offline: preservar o funcionamento local, sem prometer bloqueio remoto. */}
 }
 consultarModoOperacional();
-window.addEventListener('focus',consultarModoOperacional);
+window.addEventListener?.('focus',consultarModoOperacional);
 })();
