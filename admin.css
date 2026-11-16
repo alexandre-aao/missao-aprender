@@ -51,3 +51,25 @@
 .admin-audit-item strong{color:#4a3d90}.admin-audit-item small{display:block;color:#686c81;margin:5px 0}
 @media(max-width:760px){.admin-search{grid-template-columns:1fr 1fr}.admin-search label:first-child{grid-column:1/-1}.admin-search button{grid-column:1/-1}.admin-heading{align-items:flex-start;flex-direction:column}.admin-result{flex-direction:column;align-items:stretch}.admin-result>button{align-self:start}}
 @media(max-width:480px){.admin-summary{grid-template-columns:1fr 1fr}.admin-summary>div:last-child{grid-column:1/-1}.admin-detail-grid{grid-template-columns:1fr}.admin-search{grid-template-columns:1fr}.admin-search label:first-child{grid-column:auto}.admin-search button{grid-column:auto}.admin-tabs{display:grid;grid-template-columns:1fr 1fr}.admin-tab:last-child{grid-column:1/-1}}
+
+/* Gestão pedagógica Fase 2 — componentes responsivos */
+.admin-subtitle{margin:24px 0 12px;font-size:17px;color:#322f55}
+.admin-ped-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0 15px}
+.admin-ped-worlds{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.admin-ped-world{background:#fbfaff;border:1px solid #e4dff1;border-radius:15px;padding:16px}
+.admin-ped-world strong{color:#39326b;font-size:14px}.admin-ped-world p{font-size:12px;color:#676b83;margin:8px 0;line-height:1.6}
+.admin-meter{height:9px;overflow:hidden;border-radius:99px;background:#e9e5f5;margin:10px 0}
+.admin-meter span{display:block;height:100%;background:#8070cb;border-radius:99px}
+.admin-ped-world small{color:#737387;font-size:11px;line-height:1.5}
+.admin-toggle-filter{display:flex;align-items:center;gap:8px;font-size:12px;color:#4c496a;font-weight:750}
+.admin-toggle-filter select{min-height:42px;border-radius:10px;padding:8px;border:1px solid #d3cce5;max-width:210px}
+.admin-ped-detail{font-size:13px;line-height:1.7;color:#606078}
+.admin-ped-detail strong{color:#3a2e6f}
+.admin-mission-status{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:7px 0}
+.admin-ped-report-row{border:1px solid #e5dfed;padding:14px;border-radius:13px;background:#fcfaff}
+.admin-ped-report-row strong{color:#3e336f}
+.admin-ped-report-row p{font-size:12px;color:#676b82;margin:6px 0}
+.admin-catalog-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:12px}
+.admin-catalog-actions button{min-height:42px}
+.admin-dialog .admin-ped-form{border-top:1px solid #e3dcea;padding-top:12px;margin-top:16px}
+@media(max-width:540px){.admin-ped-worlds{grid-template-columns:1fr}.admin-ped-actions{align-items:stretch}.admin-ped-actions>button{flex:1}.admin-catalog-actions button{flex:1}}

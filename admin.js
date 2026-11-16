@@ -128,13 +128,15 @@ async function loadAudit(){
 }
 async function switchTab(aba){
  state.aba=aba;
- for(const name of ['familias','criancas','auditoria']){
+ for(const name of ['familias','criancas','pedagogia','catalogo','auditoria']){
   $('painel-'+name).hidden=aba!==name;
   const b=$('aba-'+name);b.classList.toggle('active',aba===name);b.setAttribute('aria-pressed',String(aba===name));
  }
  informar();
  if(aba==='familias'&&!state.carregadoFamilias)await loadFamilies();
  if(aba==='criancas'&&!state.carregadoCriancas)await loadChildren();
+ if(aba==='pedagogia')await carregarPedagogia();
+ if(aba==='catalogo'){if(!pedagogiaState.data)await carregarPedagogia();renderCatalogo();}
  if(aba==='auditoria')await loadAudit();
 }
 function dialog(title){
@@ -232,7 +234,7 @@ function openChild(k){
 $('fechar-ficha').onclick=()=>$('ficha-dialog').close();
 $('form-buscar-familias').onsubmit=async ev=>{ev.preventDefault();state.offsetFamilias=0;await loadFamilies();};
 $('form-buscar-criancas').onsubmit=async ev=>{ev.preventDefault();state.offsetCriancas=0;await loadChildren();};
-for(const name of ['familias','criancas','auditoria'])$('aba-'+name).onclick=()=>switchTab(name);
+for(const name of ['familias','criancas','pedagogia','catalogo','auditoria'])$('aba-'+name).onclick=()=>switchTab(name);
 for(const kind of ['familias','criancas']){
  const prop=kind==='familias'?'offsetFamilias':'offsetCriancas';
  const load=kind==='familias'?loadFamilies:loadChildren;
@@ -244,6 +246,176 @@ $('limpar-filtro-familia').onclick=async()=>{
  $('filtro-familia-ativo').hidden=true;await loadChildren();
 };
 $('atualizar-auditoria').onclick=loadAudit;
+
+/* Fase 2: administração pedagógica agregada e fluxo editorial do catálogo. */
+const pedagogiaState={data:null,filtroOffset:0};
+const nfmt=value=>Number(value||0).toLocaleString('pt-BR');
+function statPedagogica(label,number){
+ const box=document.createElement('div');
+ box.append(elem('strong',number),elem('span',label));return box;
+}
+function montarIndicadoresPedagogicos(data){
+ const r=data.resumo||{},root=$('pedagogia-metricas');root.replaceChildren();
+ const items=[
+  ['Crianças cadastradas',nfmt(r.perfis_total)],
+  ['Com progresso sincronizado',nfmt(r.perfis_sincronizados)],
+  ['Sem sincronização',nfmt(r.perfis_sem_sincronizacao)],
+  ['Sincronizadas em 30 dias',nfmt(r.sinc_30d)],
+  ['Missões concluídas (soma)',nfmt(r.conclusoes)],
+  ['Registros de atividades',nfmt(r.registros)],
+  ['De primeira (registros)',r.indice_primeira_tentativa==null?'Sem amostra':r.indice_primeira_tentativa+'%'],
+  ['Missões ocultas',nfmt(r.ocultas)]
+ ];
+ for(const [label,value] of items)root.append(statPedagogica(label,value));
+ $('pedagogia-aviso').textContent=r.perfis_sincronizados===0?
+  'Ainda não há progresso sincronizado. Os dados locais e o jogo anônimo não são contados.':
+  'Última sincronização: '+dataFormat(r.ultima_sincronizacao)+' · '+nfmt(r.perfis_sincronizados)+' de '+nfmt(r.perfis_total)+
+  ' perfis possuem dados em nuvem. Uma sincronização recente NÃO confirma participação diária.';
+ const worlds=$('pedagogia-mundos');worlds.replaceChildren();
+ for(const w of data.mundos||[]){
+  const card=elem('article',undefined,'admin-ped-world');
+  card.append(elem('strong',w.nome));
+  const percent=w.missoes?Math.round(w.com_conclusoes/w.missoes*100):0;
+  card.append(elem('p',nfmt(w.com_conclusoes)+' de '+nfmt(w.missoes)+' missões com ao menos uma conclusão'));
+  const meter=elem('div',undefined,'admin-meter');
+  const fill=elem('span');fill.style.width=percent+'%';meter.append(fill);card.append(meter);
+  card.append(elem('small',nfmt(w.concluintes)+' conclusões entre perfis · '+nfmt(w.praticas)+' registros · '+
+   nfmt(w.erros)+' erros registrados'+(w.ocultas?' · '+nfmt(w.ocultas)+' ocultas':'')));
+  worlds.append(card);
+ }
+ const difficult=$('pedagogia-revisao');difficult.replaceChildren();
+ if(!data.revisao?.length){
+  difficult.append(elem('p','Amostra insuficiente para destacar missões com dificuldades recorrentes.','admin-empty'));
+ }else{
+  for(const row of data.revisao){
+   const item=elem('article',undefined,'admin-ped-report-row');
+   item.append(elem('strong',row.title));
+   item.append(elem('p',nfmt(row.eventos)+' registros, '+nfmt(row.erros)+' erros e '+row.indice_primeira_tentativa+'% concluídos de primeira.'));
+   const btn=button('Ver no catálogo',async()=>{await switchTab('catalogo');$('buscar-catalogo').value=row.id;pedagogiaState.filtroOffset=0;renderCatalogo();});
+   item.append(btn);difficult.append(item);
+  }
+ }
+}
+async function carregarPedagogia(){
+ const btn=$('atualizar-pedagogia');btn.disabled=true;
+ try{
+  const r=await api('/api/pedagogia?tipo=resumo');
+  if(!Array.isArray(r.missoes)||r.missoes.length!==140||!Array.isArray(r.mundos))
+   throw Error('Resposta incompleta do catálogo.');
+  pedagogiaState.data=r;pedagogiaState.filtroOffset=0;
+  montarIndicadoresPedagogicos(r);renderCatalogo();
+  informar();
+ }catch(e){informar('Gestão pedagógica: '+e.message,true);}
+ finally{btn.disabled=false;}
+}
+function catalogoFiltrado(){
+ const all=pedagogiaState.data?.missoes||[];
+ const busca=$('buscar-catalogo').value.trim().toLocaleLowerCase('pt-BR'),world=$('mundo-catalogo').value,
+ status=$('status-catalogo').value;
+ return all.filter(m=>(!busca||[m.id,m.title].some(v=>String(v).toLocaleLowerCase('pt-BR').includes(busca)))&&
+ (world==='todos'||m.world===world)&&
+ (status==='todas'||status==='ocultas'&&m.oculto||status==='visiveis'&&!m.oculto||status==='revisao'&&m.revisao_pendente));
+}
+function renderCatalogo(){
+ const root=$('catalogo-resultados');root.replaceChildren();
+ if(!pedagogiaState.data){root.append(elem('p','Carregando as missões do catálogo…','admin-empty'));return;}
+ const filtered=catalogoFiltrado(),total=filtered.length;
+ if(pedagogiaState.filtroOffset>=total)pedagogiaState.filtroOffset=Math.max(0,Math.floor((total-1)/20)*20);
+ if(!total)root.append(elem('p','Nenhuma missão corresponde aos filtros.','admin-empty'));
+ for(const m of filtered.slice(pedagogiaState.filtroOffset,pedagogiaState.filtroOffset+20)){
+  const row=elem('article',undefined,'admin-result'),main=elem('div',undefined,'admin-result-main');
+  main.append(elem('strong',m.title),elem('small',m.id+' · '+(pedagogiaState.data.mundos.find(w=>w.id===m.world)?.nome||m.world)));
+  const statuses=elem('div',undefined,'admin-mission-status');
+  statuses.append(metadado(m.oculto?'suspenso':'ativo',m.oculto?'Oculta':'Visível'));
+  if(m.revisao_pendente)statuses.append(metadado('restrito_neon','Revisão pendente'));
+  statuses.append(metadado('',nfmt(m.concluintes)+' conclusões'));
+  main.append(statuses);row.append(main,button('Gerenciar',()=>abrirMissaoPedagogica(m)));root.append(row);
+ }
+ $('catalogo-anterior').disabled=pedagogiaState.filtroOffset<=0;
+ $('catalogo-proxima').disabled=pedagogiaState.filtroOffset+20>=total;
+ $('catalogo-pagina').textContent=total?
+  'Exibindo '+(pedagogiaState.filtroOffset+1)+'–'+Math.min(pedagogiaState.filtroOffset+20,total)+' de '+total:
+  'Nenhuma missão';
+}
+function abrirMissaoPedagogica(m){
+ const root=dialog('Gestão pedagógica da missão');
+ const grid=elem('div',undefined,'admin-detail-grid');
+ const fields=[
+  ['Título',m.title],['Código estável',m.id],['Mundo',pedagogiaState.data.mundos.find(w=>w.id===m.world)?.nome||m.world],
+  ['Etapa escolar',m.grade==null?'Variável':grade(m.grade)],['Situação',m.oculto?'Oculta':'Visível'],
+  ['Revisão',m.revisao_pendente?'Pendente':'Sem pendências'],
+  ['Conclusões sincronizadas',nfmt(m.concluintes)],['Eventos registrados',nfmt(m.eventos)],
+  ['Erros informados',nfmt(m.erros)],['Primeira tentativa',m.eventos?Math.round(m.primeira_tentativa/m.eventos*100)+'%':'Sem registros']
+ ];
+ for(const [key,value] of fields)grid.append(field(key,value));root.append(grid);
+ root.append(elem('p','Ocultar preserva o código, as conquistas e o progresso. Para corrigir as perguntas é necessário alterar o código do jogo.','admin-footnote'));
+ root.append(elem('h3','Ações editoriais'));
+ const actions=elem('div',undefined,'admin-catalog-actions');
+ const choices=[
+  [m.oculto?'mostrar':'ocultar',m.oculto?'Tornar visível':'Ocultar missão'],
+  [m.revisao_pendente?'resolver':'sinalizar',m.revisao_pendente?'Concluir revisão':'Sinalizar para revisão']
+ ];
+ const form=document.createElement('form');form.className='admin-ped-form';form.hidden=true;
+ const title=elem('strong','', 'admin-ped-detail');form.append(title);
+ const reason=makeFormField(form,'Justificativa (10 a 200 caracteres)','motivo');reason.minLength=10;reason.maxLength=200;
+ const submit=elem('button','Confirmar alteração','admin-primary');submit.type='submit';form.append(submit);
+ let acao=null;
+ for(const [key,label] of choices){
+  actions.append(button(label,()=>{acao=key;title.textContent='Ação: '+label;form.hidden=false;reason.focus();}));
+ }
+ form.onsubmit=async event=>{
+  event.preventDefault();if(!acao)return;
+  if(!confirm('Confirmar a alteração editorial da missão '+m.id+'?'))return;
+  submit.disabled=true;
+  try{
+   await api('/api/pedagogia','PATCH',{id:m.id,acao,motivo:reason.value});
+   $('ficha-dialog').close();await carregarPedagogia();
+   informar('Alteração editorial registrada com sucesso. Progresso e conquistas foram preservados.');
+  }catch(e){informar(e.message,true);}
+  finally{submit.disabled=false;}
+ };
+ root.append(actions,form);
+}
+async function carregarHistoricoCatalogo(){
+ const root=$('historico-catalogo');root.replaceChildren();
+ try{
+  const r=await api('/api/pedagogia?tipo=auditoria');
+  if(!r.historico?.length){root.append(elem('p','Ainda não existem alterações editoriais.','admin-empty'));return;}
+  for(const h of r.historico){
+   const item=elem('article',undefined,'admin-audit-item');
+   item.append(elem('strong',h.missao_id+' · '+h.acao),
+    elem('small',dataFormat(h.criado_em)),
+    elem('span','Justificativa: '+h.justificativa));root.append(item);
+  }
+ }catch(e){root.append(elem('p','Histórico indisponível: '+e.message,'admin-empty'));}
+}
+function exportarCSVPedagogico(){
+ const data=pedagogiaState.data;
+ if(!data){informar('Carregue os indicadores antes de exportar.',true);return;}
+ const safe=x=>{
+  let v=String(x??'');
+  if(/^[=+@-]/.test(v))v="'"+v;
+  return '"'+v.replaceAll('"','""')+'"';
+ };
+ const rows=[['Mundo','Código','Título','Ano','Oculta','Revisão pendente','Conclusões','Registros','Primeira tentativa','Erros']];
+ for(const m of data.missoes)
+  rows.push([m.world,m.id,m.title,m.grade??'',m.oculto?'Sim':'Não',m.revisao_pendente?'Sim':'Não',
+   m.concluintes,m.eventos,m.primeira_tentativa,m.erros]);
+ const csv='\ufeff'+rows.map(a=>a.map(safe).join(';')).join('\r\n');
+ const file=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+ const url=URL.createObjectURL(file),a=document.createElement('a');
+ a.href=url;a.download='missao-aprender-relatorio-pedagogico.csv';document.body.append(a);a.click();a.remove();
+ URL.revokeObjectURL(url);informar('Relatório agregado preparado para download.');
+}
+$('atualizar-pedagogia').onclick=carregarPedagogia;
+$('exportar-pedagogia').onclick=exportarCSVPedagogico;
+$('form-catalogo').onsubmit=event=>{event.preventDefault();pedagogiaState.filtroOffset=0;renderCatalogo();};
+$('status-catalogo').onchange=()=>{pedagogiaState.filtroOffset=0;renderCatalogo();};
+$('catalogo-anterior').onclick=()=>{pedagogiaState.filtroOffset=Math.max(0,pedagogiaState.filtroOffset-20);renderCatalogo();};
+$('catalogo-proxima').onclick=()=>{pedagogiaState.filtroOffset+=20;renderCatalogo();};
+$('recarregar-catalogo').onclick=carregarPedagogia;
+$('atualizar-historico-catalogo').onclick=carregarHistoricoCatalogo;
+
 async function start(){
  try{
   if(!auth)throw Error('Autenticação não configurada.');
