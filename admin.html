@@ -41,6 +41,9 @@
       <button id="aba-criancas" type="button" class="admin-tab" aria-pressed="false">🚀 Crianças</button>
       <button id="aba-pedagogia" type="button" class="admin-tab" aria-pressed="false">📊 Pedagogia</button>
       <button id="aba-catalogo" type="button" class="admin-tab" aria-pressed="false">📚 Catálogo</button>
+      <button id="aba-operacao" type="button" class="admin-tab" aria-pressed="false">⚙️ Operação</button>
+      <button id="aba-solicitacoes" type="button" class="admin-tab" aria-pressed="false">✉️ Solicitações</button>
+      <button id="aba-seguranca" type="button" class="admin-tab" aria-pressed="false">🛡️ Segurança</button>
       <button id="aba-auditoria" type="button" class="admin-tab" aria-pressed="false">📋 Histórico</button>
      </nav>
      <section id="painel-familias" aria-label="Famílias cadastradas" class="admin-module">
@@ -95,6 +98,50 @@
       <button type="button" id="atualizar-historico-catalogo" class="admin-outline">Consultar histórico</button>
       <div id="historico-catalogo" class="admin-results" aria-live="polite"></div>
       <p class="admin-footnote">Ocultar retira a missão da lista de navegação quando a configuração online é carregada; não remove código distribuído nem histórico armazenado. Se o serviço de configuração estiver indisponível, o catálogo local ainda será exibido. Correções do conteúdo exigem uma versão nova do aplicativo.</p>
+     </section>
+     <section id="painel-operacao" aria-label="Configurações e manutenção" class="admin-module" hidden>
+      <div class="admin-section-heading"><div><h2>⚙️ Configurações operacionais</h2>
+      <p>Controle os acessos às APIs familiares e a mensagem exibida no aplicativo. Todas as mudanças exigem justificativa e são auditadas.</p></div></div>
+      <div id="operacao-atual" class="admin-notice" role="status">Consultando configuração…</div>
+      <form id="form-operacao" class="admin-advanced-form">
+       <label>Modo de funcionamento
+        <select name="modo" id="operacao-modo" required>
+         <option value="normal">Normal — cadastros e sincronização disponíveis</option>
+         <option value="somente_leitura">Somente leitura — bloqueia alterações e envios à nuvem</option>
+         <option value="manutencao">Manutenção — bloqueia APIs familiares e exibe aviso no jogo</option>
+        </select>
+       </label>
+       <label>Aviso público (opcional, até 180 caracteres)
+        <textarea id="operacao-aviso" name="aviso_publico" maxlength="180" rows="3" placeholder="Mensagem breve aos responsáveis e crianças"></textarea>
+       </label>
+       <label>Justificativa obrigatória (10 a 200 caracteres)
+        <textarea id="operacao-motivo" name="motivo" minlength="10" maxlength="200" rows="2" required placeholder="Explique o motivo da alteração"></textarea>
+       </label>
+       <button type="submit" class="admin-primary">Salvar configuração global</button>
+      </form>
+      <p class="admin-footnote">O Administrador Geral continua com acesso às APIs privadas durante manutenção. A autenticação pelo Neon não é suspensa. O modo de manutenção também sinaliza pausa na interface infantil quando online; atividades já carregadas e cópias offline não podem ser bloqueadas remotamente. O progresso local permanece preservado.</p>
+     </section>
+     <section id="painel-solicitacoes" aria-label="Central de solicitações" class="admin-module" hidden>
+      <div class="admin-section-heading"><div><h2>✉️ Suporte e direitos de dados</h2>
+       <p>Solicitações enviadas pelos responsáveis sobre suporte, acesso, correção, cópia ou exclusão de dados.</p></div></div>
+      <div class="admin-ped-actions">
+       <label class="admin-toggle-filter">Situação
+        <select id="solicitacoes-estado"><option value="todos">Todas</option><option value="aberta">Abertas</option><option value="em_analise">Em análise</option><option value="respondida">Respondidas</option><option value="concluida">Concluídas</option></select>
+       </label>
+       <button id="atualizar-solicitacoes" type="button" class="admin-outline">Atualizar</button>
+      </div>
+      <div id="lista-solicitacoes" class="admin-results" aria-live="polite"></div>
+      <div class="admin-pagination"><button id="solicitacoes-anterior" type="button">Anterior</button><span id="solicitacoes-pagina">—</span><button id="solicitacoes-proxima" type="button">Próxima</button></div>
+      <p class="admin-footnote">Concluir uma solicitação de exclusão NÃO apaga dados automaticamente. Verifique a identidade do responsável, a finalidade e as obrigações legais antes de qualquer procedimento externo. Não solicite senhas ou informações médicas.</p>
+     </section>
+     <section id="painel-seguranca" aria-label="Segurança e auditoria geral" class="admin-module" hidden>
+      <div class="admin-section-heading"><div><h2>🛡️ Saúde e auditoria</h2>
+      <p>Conectividade do banco e alterações administrativas em famílias, catálogo, operação, exportação e suporte.</p></div></div>
+      <div class="admin-ped-actions"><button id="verificar-saude" type="button" class="admin-outline">Verificar serviços</button><button id="atualizar-auditoria-unificada" type="button" class="admin-outline">Atualizar auditoria</button></div>
+      <div id="resumo-saude" class="admin-summary" role="status"></div>
+      <p class="admin-footnote">Este diagnóstico verifica respostas do servidor e indicadores do banco no momento da consulta. Não substitui monitoramento de erros e logs da Vercel, alertas ou disponibilidade histórica.</p>
+      <h3 class="admin-subtitle">Últimas ações administrativas</h3>
+      <div id="lista-auditoria-unificada" class="admin-results" aria-live="polite"></div>
      </section>
      <section id="painel-auditoria" aria-label="Histórico de alterações" class="admin-module" hidden>
       <div class="admin-section-heading"><div><h2>Alterações administrativas</h2><p>Justificativas e datas de suspensão, reativação e correção de perfil. Não inclui consultas nem autenticações do Neon.</p></div></div>

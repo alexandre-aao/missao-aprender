@@ -1436,4 +1436,47 @@ async function atualizarVisibilidade(){
  }catch{ /* Sem conexão, o catálogo local continua jogável. */ }
 }
 atualizarVisibilidade();
+// Modo de manutenção sinalizado pelo servidor. A segurança das APIs é imposta no backend.
+// Jogos e progresso já armazenados localmente não podem ser revogados à distância.
+async function consultarModoOperacional(){
+ try{
+  const response=await fetch('/api/configuracao-publica',{cache:'no-store'});
+  if(!response.ok)return;
+  const status=await response.json();
+  if(!['normal','somente_leitura','manutencao'].includes(status?.modo))return;
+  let note=document.getElementById('ma-aviso-operacional');
+  if(!note){
+   note=document.createElement('aside');note.id='ma-aviso-operacional';
+   note.setAttribute('role','status');note.className='ma-aviso-operacional';
+   (document.querySelector('.app-main')||document.body).prepend(note);
+  }
+  note.replaceChildren();
+  if(status.modo==='normal'&&!status.aviso){note.hidden=true;}
+  else{
+   note.hidden=false;
+   const strong=document.createElement('strong');
+   strong.textContent=status.modo==='manutencao'?'🛠️ Missão Aprender em manutenção':
+    status.modo==='somente_leitura'?'ℹ️ Modo somente leitura':'📢 Aviso';
+   const text=document.createElement('p');
+   text.textContent=status.aviso||(status.modo==='manutencao'?
+    'As áreas privadas estão temporariamente indisponíveis. Volte mais tarde.':
+    'Os cadastros e envios à nuvem estão pausados por enquanto.');
+   note.append(strong,text);
+  }
+  let gate=document.getElementById('ma-bloqueio-manutencao');
+  if(status.modo==='manutencao'){
+   if(!gate){gate=document.createElement('div');gate.id='ma-bloqueio-manutencao';
+    gate.className='ma-bloqueio-manutencao';gate.setAttribute('role','alertdialog');
+    gate.setAttribute('aria-modal','true');gate.setAttribute('aria-label','Manutenção');
+    document.body.append(gate);}
+   gate.replaceChildren();
+   const title=document.createElement('h2');title.textContent='🛠️ Estamos cuidando da nave!';
+   const p=document.createElement('p');p.textContent=status.aviso||'O Missão Aprender está em manutenção. Suas conquistas locais continuam guardadas.';
+   const link=document.createElement('a');link.href='./conta.html';link.textContent='Área dos responsáveis';
+   gate.append(title,p,link);
+  }else if(gate){gate.remove();}
+ }catch{/* Offline: preservar o funcionamento local, sem prometer bloqueio remoto. */}
+}
+consultarModoOperacional();
+window.addEventListener?.('focus',consultarModoOperacional);
 })();

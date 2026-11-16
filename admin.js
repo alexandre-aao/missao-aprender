@@ -128,7 +128,7 @@ async function loadAudit(){
 }
 async function switchTab(aba){
  state.aba=aba;
- for(const name of ['familias','criancas','pedagogia','catalogo','auditoria']){
+ for(const name of ['familias','criancas','pedagogia','catalogo','operacao','solicitacoes','seguranca','auditoria']){
   $('painel-'+name).hidden=aba!==name;
   const b=$('aba-'+name);b.classList.toggle('active',aba===name);b.setAttribute('aria-pressed',String(aba===name));
  }
@@ -137,6 +137,9 @@ async function switchTab(aba){
  if(aba==='criancas'&&!state.carregadoCriancas)await loadChildren();
  if(aba==='pedagogia')await carregarPedagogia();
  if(aba==='catalogo'){if(!pedagogiaState.data)await carregarPedagogia();renderCatalogo();}
+ if(aba==='operacao')await carregarOperacao();
+ if(aba==='solicitacoes')await carregarSolicitacoes();
+ if(aba==='seguranca')await Promise.all([verificarSaude(),carregarAuditoriaUnificada()]);
  if(aba==='auditoria')await loadAudit();
 }
 function dialog(title){
@@ -229,12 +232,34 @@ function openChild(k){
    $('ficha-dialog').close();await loadChildren();informar('Cadastro corrigido e alteração auditada. O histórico de progresso foi preservado.');
   }catch(e){informar(e.message,true);}finally{submit.disabled=false;}
  };
- root.append(form);
+ root.append(form,elem('h3','Dados e privacidade'));
+ root.append(elem('p','Exportação individual dos dados sincronizados. O arquivo contém informações de uma criança e deve ser guardado com segurança.','admin-footnote'));
+ root.append(button('Exportar dados deste perfil',()=>{
+  if(root.querySelector('#export-form'))return;
+  const f=document.createElement('form');f.id='export-form';f.className='admin-advanced-form';
+  const l=elem('label','Justificativa da exportação (10–200 caracteres)');
+  const textarea=document.createElement('textarea');textarea.required=true;textarea.minLength=10;textarea.maxLength=200;textarea.rows=3;
+  l.append(textarea);f.append(l);
+  const submit=elem('button','Confirmar exportação individual','admin-primary');submit.type='submit';f.append(submit);
+  f.onsubmit=async e=>{
+   e.preventDefault();if(!confirm('Este download contém dados de criança. Confirmar a exportação auditada?'))return;
+   submit.disabled=true;
+   try{
+    const r=await api('/api/administracao-avancada','POST',{acao:'exportar_crianca',id:k.id,motivo:textarea.value});
+    if(!r.exportacao)throw Error('Dados indisponíveis.');
+    const blob=new Blob([JSON.stringify(r.exportacao,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='missao-aprender-perfil-'+k.id+'.json';document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);
+    textarea.value='';informar('Exportação criada e registrada na auditoria.');
+   }catch(err){informar(err.message,true);}finally{submit.disabled=false;}
+  };
+  root.append(f);textarea.focus();
+ }));
 }
 $('fechar-ficha').onclick=()=>$('ficha-dialog').close();
 $('form-buscar-familias').onsubmit=async ev=>{ev.preventDefault();state.offsetFamilias=0;await loadFamilies();};
 $('form-buscar-criancas').onsubmit=async ev=>{ev.preventDefault();state.offsetCriancas=0;await loadChildren();};
-for(const name of ['familias','criancas','pedagogia','catalogo','auditoria'])$('aba-'+name).onclick=()=>switchTab(name);
+for(const name of ['familias','criancas','pedagogia','catalogo','operacao','solicitacoes','seguranca','auditoria'])$('aba-'+name).onclick=()=>switchTab(name);
 for(const kind of ['familias','criancas']){
  const prop=kind==='familias'?'offsetFamilias':'offsetCriancas';
  const load=kind==='familias'?loadFamilies:loadChildren;
@@ -415,6 +440,115 @@ $('catalogo-anterior').onclick=()=>{pedagogiaState.filtroOffset=Math.max(0,pedag
 $('catalogo-proxima').onclick=()=>{pedagogiaState.filtroOffset+=20;renderCatalogo();};
 $('recarregar-catalogo').onclick=carregarPedagogia;
 $('atualizar-historico-catalogo').onclick=carregarHistoricoCatalogo;
+
+
+/* Fase 3: Configuração global, solicitações de famílias e auditoria consolidada. */
+const avancado={offset:0,total:0};
+const nomesStatus={aberta:'Aberta',em_analise:'Em análise',respondida:'Respondida',concluida:'Concluída'};
+const nomesTipo={suporte:'Suporte',exportacao:'Exportação de dados',exclusao:'Exclusão de dados',correcao:'Correção de dados'};
+function rotuloFormulario(label,input){
+ const el=elem('label',label);el.append(input);return el;
+}
+function cardNumero(root,label,value){
+ const box=elem('div');box.append(elem('strong',value),elem('span',label));root.append(box);
+}
+async function carregarOperacao(){
+ try{
+  const {configuracao:c}=await api('/api/administracao-avancada?tipo=configuracao');
+  if(!c)throw Error('Configuração não localizada.');
+  $('operacao-modo').value=c.modo;$('operacao-aviso').value=c.aviso_publico||'';
+  $('operacao-atual').textContent='Modo atual: '+({normal:'Normal',manutencao:'Manutenção',somente_leitura:'Somente leitura'}[c.modo]||c.modo)+
+   ' · alterado em '+dataFormat(c.atualizado_em);
+ }catch(err){informar('Operação: '+err.message,true);}
+}
+$('form-operacao').onsubmit=async e=>{
+ e.preventDefault();
+ const b=$('form-operacao').querySelector('[type=submit]'),modo=$('operacao-modo').value;
+ if(!confirm('Aplicar modo '+modo+'? Isso pode interromper cadastros e sincronização imediatamente.'))return;
+ b.disabled=true;
+ try{
+  await api('/api/administracao-avancada','PATCH',{acao:'configuracao',modo,
+   aviso_publico:$('operacao-aviso').value,motivo:$('operacao-motivo').value});
+  $('operacao-motivo').value='';await carregarOperacao();informar('Configuração aplicada e auditada.');
+ }catch(err){informar(err.message,true);}finally{b.disabled=false;}
+};
+async function carregarSolicitacoes(){
+ const root=$('lista-solicitacoes');root.replaceChildren();
+ try{
+  const p=new URLSearchParams({tipo:'solicitacoes',estado:$('solicitacoes-estado').value,
+   limite:'20',offset:String(avancado.offset)});
+  const r=await api('/api/administracao-avancada?'+p);
+  avancado.total=Number(r.total||0);
+  if(!r.solicitacoes?.length)root.append(elem('p','Nenhuma solicitação encontrada.','admin-empty'));
+  for(const item of r.solicitacoes||[]){
+   const row=elem('article',undefined,'admin-result'),body=elem('div',undefined,'admin-result-main');
+   body.append(elem('strong',(nomesTipo[item.tipo]||item.tipo)+' · '+(nomesStatus[item.status]||item.status)),
+    elem('small',item.email+' · '+dataFormat(item.criado_em)));
+   row.append(body,button('Ver solicitação',()=>abrirSolicitacao(item)));root.append(row);
+  }
+  $('solicitacoes-anterior').disabled=avancado.offset===0;
+  $('solicitacoes-proxima').disabled=avancado.offset+20>=avancado.total;
+  $('solicitacoes-pagina').textContent=avancado.total?avancado.offset+1+'–'+Math.min(avancado.offset+20,avancado.total)+' de '+avancado.total:'Nenhum resultado';
+ }catch(err){informar('Solicitações: '+err.message,true);}
+}
+function abrirSolicitacao(item){
+ const root=dialog('Atendimento à família'),detail=elem('div',undefined,'admin-detail-grid');
+ for(const [label,value] of [['Assunto',nomesTipo[item.tipo]||item.tipo],['Responsável',item.email],['Estado',nomesStatus[item.status]||item.status],['Recebida em',dataFormat(item.criado_em)]])
+  detail.append(field(label,value));
+ root.append(detail,elem('h3','Mensagem recebida'),elem('p',item.descricao));
+ if(item.resposta)root.append(elem('h3','Resposta registrada'),elem('p',item.resposta));
+ if(item.status==='concluida'){root.append(elem('p','Solicitação concluída.','admin-empty'));return;}
+ const form=document.createElement('form');form.className='admin-advanced-form';
+ const sel=document.createElement('select');
+ for(const [val,label] of [['em_analise','Em análise'],['respondida','Respondida'],['concluida','Concluída']]){
+  const opt=document.createElement('option');opt.value=val;opt.textContent=label;sel.append(opt);
+ }
+ sel.value=item.status==='aberta'?'em_analise':item.status;form.append(rotuloFormulario('Atualizar situação',sel));
+ const resposta=document.createElement('textarea');resposta.required=true;resposta.minLength=10;resposta.maxLength=500;resposta.rows=4;resposta.value=item.resposta||'';
+ form.append(rotuloFormulario('Resposta ao responsável (10–500 caracteres)',resposta));
+ const motivo=document.createElement('textarea');motivo.required=true;motivo.minLength=10;motivo.maxLength=200;motivo.rows=2;
+ form.append(rotuloFormulario('Justificativa administrativa (10–200 caracteres)',motivo));
+ const send=elem('button','Registrar atendimento','admin-primary');send.type='submit';form.append(send);
+ form.onsubmit=async e=>{
+  e.preventDefault();if(!confirm('Registrar resposta e situação da solicitação?'))return;
+  send.disabled=true;
+  try{
+   await api('/api/administracao-avancada','PATCH',{acao:'solicitacao',id:item.id,estado:sel.value,resposta:resposta.value,motivo:motivo.value});
+   $('ficha-dialog').close();await carregarSolicitacoes();informar('Resposta registrada na auditoria.');
+  }catch(err){informar(err.message,true);}finally{send.disabled=false;}
+ };
+ root.append(form);
+}
+$('solicitacoes-estado').onchange=()=>{avancado.offset=0;carregarSolicitacoes();};
+$('atualizar-solicitacoes').onclick=carregarSolicitacoes;
+$('solicitacoes-anterior').onclick=()=>{avancado.offset=Math.max(0,avancado.offset-20);carregarSolicitacoes();};
+$('solicitacoes-proxima').onclick=()=>{avancado.offset+=20;carregarSolicitacoes();};
+async function verificarSaude(){
+ const root=$('resumo-saude');root.replaceChildren();
+ try{
+  const r=await api('/api/administracao-avancada?tipo=saude'),d=r.saude;
+  if(!d)throw Error('Resposta ausente.');
+  cardNumero(root,'Banco de dados',d.configuracao_valida?'Conectado':'Configuração ausente');
+  cardNumero(root,'Perfis infantis',nfmt(d.perfis));cardNumero(root,'Com sincronização',nfmt(d.sincronizados));
+  cardNumero(root,'Solicitações em aberto',nfmt(d.solicitacoes_abertas));
+  cardNumero(root,'Tempo da consulta',nfmt(r.consulta_ms)+' ms');
+ }catch(e){root.append(elem('p','Saúde indisponível: '+e.message,'admin-empty'));}
+}
+async function carregarAuditoriaUnificada(){
+ const root=$('lista-auditoria-unificada');root.replaceChildren();
+ try{
+  const r=await api('/api/administracao-avancada?tipo=auditoria');
+  if(!r.auditoria?.length){root.append(elem('p','Não existem registros administrativos.','admin-empty'));return;}
+  for(const registro of r.auditoria){
+   const card=elem('article',undefined,'admin-audit-item');
+   card.append(elem('strong',registro.origem+' · '+registro.acao),
+    elem('small',dataFormat(registro.criado_em)+' · Referência: '+registro.alvo_id),
+    elem('span','Justificativa: '+registro.justificativa));root.append(card);
+  }
+ }catch(e){root.append(elem('p','Auditoria indisponível: '+e.message,'admin-empty'));}
+}
+$('verificar-saude').onclick=verificarSaude;
+$('atualizar-auditoria-unificada').onclick=carregarAuditoriaUnificada;
 
 async function start(){
  try{

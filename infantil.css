@@ -324,3 +324,16 @@ a.btn{text-decoration:none}
 }
 .exp-icon.tone-blue{color:#2259b8}
 .exp-icon.tone-red{color:#af293e}
+
+/* Comunicação sobre manutenção: não é bloqueio técnico de cópias offline. */
+.ma-aviso-operacional{position:relative;margin:14px auto;width:min(95%,700px);background:#fff7e7;
+ border:1px solid #e3c58c;border-radius:15px;padding:13px 17px;color:#503d28;z-index:3;line-height:1.5}
+.ma-aviso-operacional strong{font-size:15px}
+.ma-aviso-operacional p{font-size:13px;margin:6px 0 0}
+.ma-bloqueio-manutencao{position:fixed;inset:0;z-index:200;background:rgba(249,247,255,.98);
+ display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+ padding:24px;color:#35305c}
+.ma-bloqueio-manutencao h2{font-size:clamp(24px,5vw,36px);margin-bottom:15px}
+.ma-bloqueio-manutencao p{max-width:480px;font-size:16px;line-height:1.55}
+.ma-bloqueio-manutencao a{display:inline-block;margin-top:16px;background:#6455b9;color:#fff;
+ border-radius:13px;padding:13px 20px;text-decoration:none;font-weight:800}
