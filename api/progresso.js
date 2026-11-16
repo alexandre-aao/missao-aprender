@@ -21,6 +21,8 @@ export default async function handler(req,res){
  const user=await subject(req);
  if(!user)return respostaJson(res,401,{erro:'Entre como responsável para sincronizar.'});
  try{
+  const acesso=await sql`SELECT missao_api.acesso_familiar_permitido(${user}) AS permitido`;
+  if(acesso[0]?.permitido!==true)return respostaJson(res,403,{erro:'Acesso familiar suspenso ou indisponível. O progresso local permanece guardado.'});
   if(req.method==='GET'){
    const id=new URL(req.url,'https://internal.invalid').searchParams.get('perfil_id');
    if(!validarId(id))return respostaJson(res,422,{erro:'Perfil inválido.'});

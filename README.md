@@ -103,3 +103,9 @@ As oito missões científicas clássicas (plantas, flutuação, ímãs, sombras,
 Elas ganharam cenas ilustradas próprias e perguntas de comparação. Algumas oferecem mais situações para explorar, como a Lua refletindo luz, o gelo voltando a congelar, a atração por ímãs e a crisálida da borboleta. As explicações foram ajustadas para evitar generalizações científicas incorretas.
 
 Continuam sendo **96 missões, 20 de Ciências**: 18 investigações guiadas e 2 simulações com controles (gravidade e dia/noite). Os oito IDs, o progresso já salvo, as estrelas e a sincronização por perfil não foram alterados. Não houve migração no Neon nem inclusão de dependências.
+
+## Gestão do Administrador Geral — Fase 1 (branch de homologação)
+
+A página `admin.html` reúne contas adultas, crianças vinculadas, filtros, fichas, suspensão/reativação de acesso privado e correção auditada de apelido/avatar/ano escolar. A API administrativa é `api/admin-gestao.js`; a migração está em `database/2026-11-15_admin_fase1.sql`. Esta implementação permanece fora da produção até homologação. **A migration deve ser aplicada antes de publicar o código**, pois a API de perfis e a sincronização passam a usar `missao_api.acesso_familiar_permitido`.
+
+Suspender um responsável bloqueia as APIs familiares do Missão Aprender, mas não exclui dados, não encerra sessões do Neon Auth e não bloqueia o acesso anônimo às missões públicas. Contas de administradores não podem ser suspensas por esta interface. O conteúdo das respostas da criança não é exibido; apenas o vínculo e a data da última sincronização. Nenhum código do SGO é alterado.
