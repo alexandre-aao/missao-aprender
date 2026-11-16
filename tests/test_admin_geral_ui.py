@@ -80,7 +80,7 @@ with sync_playwright() as pw:
   assert page.locator('#total-criancas').inner_text()=='2'
   page.locator('#lista-familias article').filter(has_text='Responsável Teste').get_by_role('button',name='Ver ficha').click()
   page.locator('#ficha-dialog').wait_for(state='visible')
-  assert 'Foguetinho' in page.locator('#ficha-conteudo').inner_text()
+  page.locator('#ficha-conteudo').get_by_text('Foguetinho',exact=False).wait_for()
   page.get_by_role('button',name='Suspender acesso familiar').click()
   page.locator('#ficha-conteudo [name=motivo]').fill('Solicitação de bloqueio de teste')
   page.once('dialog',lambda d:d.accept())
