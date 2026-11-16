@@ -1448,7 +1448,7 @@ async function consultarModoOperacional(){
   if(!note){
    note=document.createElement('aside');note.id='ma-aviso-operacional';
    note.setAttribute('role','status');note.className='ma-aviso-operacional';
-   document.body.append(note);
+   (document.querySelector('.app-main')||document.body).prepend(note);
   }
   note.replaceChildren();
   if(status.modo==='normal'&&!status.aviso){note.hidden=true;}
