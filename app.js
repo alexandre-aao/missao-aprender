@@ -1007,10 +1007,11 @@ function load(){
  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(merged))}catch(e){}
  return merged;
 }
+let missoesOcultas=new Set();
 let data=load();let storageScope=STORAGE_KEY;let view='home';let session=null;let parentAllowed=false;let gateAnswer=0;let previousView='home';let gravityTimeout=null;
 function save(){try{localStorage.setItem(storageScope,JSON.stringify(data));return true}catch(e){return false}}
-function getMission(id){return MISSIONS.find(m=>m.id===id)}
-function worldMissions(world){return MISSIONS.filter(m=>m.world===world&&(world!=='math'||(m.grade?m.grade===data.grade:data.grade==='1')))}
+function getMission(id){return MISSIONS.find(m=>m.id===id&&!missoesOcultas.has(m.id))}
+function worldMissions(world){return MISSIONS.filter(m=>!missoesOcultas.has(m.id)&&m.world===world&&(world!=='math'||(m.grade?m.grade===data.grade:data.grade==='1')))}
 function currentMissions(){return ['math','review','science',...WORLD_ORDER.slice(3)].flatMap(worldMissions)}
 function missionDone(m){return !!data.missions[m.id] || (m.type==='curriculum'&&!!data.skills[m.id]?.mastered)}
 function skillInfo(id){return data.skills[id]||{tries:0,correct:0,streak:0,mastered:false}}
@@ -1420,6 +1421,19 @@ window.MissaoAprenderSyncBridge={legacyData:()=>load(),getData:()=>data,selectSc
  else render();
 },getScope:()=>storageScope};
 window.dispatchEvent(new Event('missao-aprender:ready'));
-window.MissaoAprenderTest={MISSIONS,WORLDS,SKILLS,makeQuestion,fresh,getData:()=>data,getView:()=>view,generateQuestion,worldMissions,getCurrentAnswer:()=>session?.question?.answer||session?.mission?.right||null};
+window.MissaoAprenderTest={MISSIONS,WORLDS,SKILLS,makeQuestion,fresh,getData:()=>data,getView:()=>view,generateQuestion,worldMissions,getCurrentAnswer:()=>session?.question?.answer||session?.mission?.right||null,getOcultas:()=>[...missoesOcultas]};
 render();
+// A ocultação e uma preferencia editorial de navegação, NÃO uma barreira de seguranca.
+async function atualizarVisibilidade(){
+ try{
+  const response=await fetch('/api/catalogo-publico',{cache:'no-store'});
+  if(!response.ok)return;
+  const payload=await response.json();
+  if(!Array.isArray(payload?.ocultas))return;
+  const ids=new Set(MISSIONS.map(m=>m.id));
+  missoesOcultas=new Set(payload.ocultas.filter(id=>typeof id==='string'&&ids.has(id)));
+  if(view!=='activity'&&view!=='result')render();
+ }catch{ /* Sem conexão, o catálogo local continua jogável. */ }
+}
+atualizarVisibilidade();
 })();

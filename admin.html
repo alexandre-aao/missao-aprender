@@ -26,7 +26,7 @@
   <div class="app-main">
    <header class="topbar"><div class="top-title"><small>MISSÃO APRENDER</small><strong>Central de Administração</strong></div><div class="top-right"><span class="grade-pill">🔐 Privado</span></div></header>
    <main class="admin-main">
-    <div class="admin-heading"><div><span class="account-kicker">CENTRAL DE ADMINISTRAÇÃO</span><h1>Famílias e crianças</h1><p>Gerencie contas, vínculos familiares e perfis infantis em um só lugar.</p></div><a class="admin-back" href="./conta.html">Minha conta</a></div>
+    <div class="admin-heading"><div><span class="account-kicker">CENTRAL DE ADMINISTRAÇÃO</span><h1>Famílias e crianças</h1><p>Gerencie famílias, perfis infantis, aprendizagem e o catálogo de missões em um só lugar.</p></div><a class="admin-back" href="./conta.html">Minha conta</a></div>
     <div id="admin-carregando" class="admin-notice" role="status">Verificando as permissões de administração…</div>
     <div id="admin-negado" class="admin-notice" role="alert" hidden>Acesso restrito ao Administrador Geral. <a href="./conta.html">Entrar com sua conta</a>.</div>
     <section id="admin-app" hidden aria-label="Gerenciamento administrativo">
@@ -39,6 +39,8 @@
      <nav class="admin-tabs" aria-label="Módulos da administração">
       <button id="aba-familias" type="button" class="admin-tab active" aria-pressed="true">👪 Famílias</button>
       <button id="aba-criancas" type="button" class="admin-tab" aria-pressed="false">🚀 Crianças</button>
+      <button id="aba-pedagogia" type="button" class="admin-tab" aria-pressed="false">📊 Pedagogia</button>
+      <button id="aba-catalogo" type="button" class="admin-tab" aria-pressed="false">📚 Catálogo</button>
       <button id="aba-auditoria" type="button" class="admin-tab" aria-pressed="false">📋 Histórico</button>
      </nav>
      <section id="painel-familias" aria-label="Famílias cadastradas" class="admin-module">
@@ -61,6 +63,38 @@
       <div id="filtro-familia-ativo" class="admin-filter-note" hidden><span id="filtro-familia-label"></span><button type="button" id="limpar-filtro-familia">Mostrar todas</button></div>
       <div id="lista-criancas" class="admin-results" aria-live="polite"></div>
       <div class="admin-pagination"><button id="criancas-anterior" type="button">Anterior</button><span id="criancas-pagina"></span><button id="criancas-proxima" type="button">Próxima</button></div>
+     </section>
+     <section id="painel-pedagogia" aria-label="Relatórios pedagógicos" class="admin-module" hidden>
+      <div class="admin-section-heading"><div><h2>📊 Acompanhamento pedagógico</h2><p>Dados agregados dos perfis que sincronizaram o progresso. Não incluem uso anônimo nem correspondem a notas escolares.</p></div></div>
+      <div class="admin-ped-actions">
+       <button type="button" id="atualizar-pedagogia" class="admin-outline">Atualizar indicadores</button>
+       <button type="button" id="exportar-pedagogia" class="admin-outline">Exportar CSV agregado</button>
+      </div>
+      <div id="pedagogia-metricas" class="admin-summary" aria-live="polite"></div>
+      <p id="pedagogia-aviso" class="admin-footnote" role="status"></p>
+      <h3 class="admin-subtitle">Participação por mundo</h3>
+      <div id="pedagogia-mundos" class="admin-ped-worlds" aria-live="polite"></div>
+      <h3 class="admin-subtitle">Missões que merecem revisão</h3>
+      <p class="admin-footnote">Sinalizamos missões com pelo menos cinco registros e três erros; isso é uma indicação de conteúdo a observar, não um diagnóstico da criança.</p>
+      <div id="pedagogia-revisao" class="admin-results" aria-live="polite"></div>
+     </section>
+     <section id="painel-catalogo" aria-label="Gestão do catálogo de missões" class="admin-module" hidden>
+      <div class="admin-section-heading"><div><h2>📚 Catálogo das 140 missões</h2><p>Oculte ou reative missões da navegação sem apagar resultados, ou sinalize conteúdo para revisão de código.</p></div></div>
+      <form id="form-catalogo" class="admin-search">
+       <label>Buscar missão<input type="search" id="buscar-catalogo" maxlength="80" placeholder="Título ou código"></label>
+       <label>Mundo<select id="mundo-catalogo"><option value="todos">Todos os mundos</option><option value="review">Revisão</option><option value="math">Matemática</option><option value="science">Ciências</option><option value="words">Palavras</option><option value="logic">Lógica</option><option value="code">Programação</option><option value="english">Inglês</option><option value="money">Empreendedorismo</option></select></label>
+       <button type="submit" class="admin-primary">Filtrar</button>
+      </form>
+      <div class="admin-ped-actions">
+       <label class="admin-toggle-filter">Situação<select id="status-catalogo"><option value="todas">Todas</option><option value="visiveis">Visíveis</option><option value="ocultas">Ocultas</option><option value="revisao">A revisar</option></select></label>
+       <button id="recarregar-catalogo" type="button" class="admin-outline">Recarregar catálogo</button>
+      </div>
+      <div id="catalogo-resultados" class="admin-results" aria-live="polite"></div>
+      <div class="admin-pagination"><button id="catalogo-anterior" type="button">Anterior</button><span id="catalogo-pagina"></span><button id="catalogo-proxima" type="button">Próxima</button></div>
+      <h3 class="admin-subtitle">Histórico de alterações do catálogo</h3>
+      <button type="button" id="atualizar-historico-catalogo" class="admin-outline">Consultar histórico</button>
+      <div id="historico-catalogo" class="admin-results" aria-live="polite"></div>
+      <p class="admin-footnote">Ocultar retira a missão da lista de navegação quando a configuração online é carregada; não remove código distribuído nem histórico armazenado. Se o serviço de configuração estiver indisponível, o catálogo local ainda será exibido. Correções do conteúdo exigem uma versão nova do aplicativo.</p>
      </section>
      <section id="painel-auditoria" aria-label="Histórico de alterações" class="admin-module" hidden>
       <div class="admin-section-heading"><div><h2>Alterações administrativas</h2><p>Justificativas e datas de suspensão, reativação e correção de perfil. Não inclui consultas nem autenticações do Neon.</p></div></div>

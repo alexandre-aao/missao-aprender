@@ -109,3 +109,7 @@ Continuam sendo **96 missões, 20 de Ciências**: 18 investigações guiadas e 2
 A página `admin.html` reúne contas adultas, crianças vinculadas, filtros, fichas, suspensão/reativação de acesso privado e correção auditada de apelido/avatar/ano escolar. A API administrativa é `api/admin-gestao.js`; a migração está em `database/2026-11-15_admin_fase1.sql`. Esta implementação permanece fora da produção até homologação. **A migration deve ser aplicada antes de publicar o código**, pois a API de perfis e a sincronização passam a usar `missao_api.acesso_familiar_permitido`.
 
 Suspender um responsável bloqueia as APIs familiares do Missão Aprender, mas não exclui dados, não encerra sessões do Neon Auth e não bloqueia o acesso anônimo às missões públicas. Contas de administradores não podem ser suspensas por esta interface. O conteúdo das respostas da criança não é exibido; apenas o vínculo e a data da última sincronização. Nenhum código do SGO é alterado.
+
+## Fase 2 — Gestão Pedagógica (homologação)
+
+Abas Pedagogia/Catálogo na Central de Administração. Métricas agregadas dos perfis sincronizados, por mundo e missão, exportação CSV, ocultação editorial (sem remoção de conteúdo) e sinalização de revisão com auditoria. **Não usar os registros dos dispositivos como notas ou rankings verificados**. Ver [documentação](docs/admin-pedagogia-fase2.md). Migration antes de deploy: `database/2026-11-16_admin_fase2.sql`.
