@@ -55,7 +55,7 @@ window.fetch=async(url,opts={})=>{
    const t=(p.get('busca')||'').toLowerCase();
    const list=window.children.filter(x=>
     (!p.get('responsavel')||x.auth_user_id===p.get('responsavel')) &&
-    (p.get('ano')==='-1'||String(x.ano_escolar)===p.get('ano')) &&
+    (!p.has('ano')||p.get('ano')==='-1'||String(x.ano_escolar)===p.get('ano')) &&
     (!t||[x.apelido,x.responsavel_nome,x.responsavel_email].some(a=>a.toLowerCase().includes(t))));
    return response(200,{criancas:list.slice(Number(p.get('offset')),Number(p.get('offset'))+Number(p.get('limite'))),total:list.length});
   }
