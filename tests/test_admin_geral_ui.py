@@ -93,7 +93,7 @@ with sync_playwright() as pw:
   page.get_by_role('button',name='Salvar correção').click()
   page.get_by_text('Explorador',exact=False).first.wait_for()
   page.locator('#aba-auditoria').click()
-  assert 'Justificativa:' in page.locator('#lista-auditoria').inner_text()
+  page.locator('#lista-auditoria').get_by_text('Justificativa:',exact=False).first.wait_for()
   assert not errors,errors
   assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),f'Overflow em {width}'
   print('OK admin geral',width,height,'famílias, suspensão, criança, auditoria, sem overflow')
